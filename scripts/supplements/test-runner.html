@@ -1,0 +1,78 @@
+<p>Bun has a built-in Jest-compatible test runner. No Jest, Vitest, or Mocha needed — just name files <code>*.test.ts</code> (or <code>.spec.ts</code>) and run <code>bun test</code>.</p>
+
+<h2>Your first test</h2>
+<pre><code>// math.test.ts
+import { test, expect, describe } from "bun:test";
+
+test("adds numbers", () =&gt; {
+  expect(2 + 2).toBe(4);
+});
+
+describe("strings", () =&gt; {
+  test("uppercases", () =&gt; {
+    expect("bun".toUpperCase()).toBe("BUN");
+  });
+});</code></pre>
+<pre><code>bun test                # run all tests
+bun test math           # only files matching "math"
+bun test --watch        # re-run on change
+bun test --coverage     # coverage report</code></pre>
+
+<h2>Matchers</h2>
+<pre><code>expect(value).toBe(4);                    // ===
+expect(obj).toEqual({ a: 1 });            // deep equality
+expect(arr).toContain("x");
+expect(fn).toThrow("boom");
+expect(str).toMatch(/regex/);
+expect(value).toBeDefined();
+expect(promise).resolves.toBe(42);        // async
+await expect(promise).rejects.toThrow();
+expect(n).toBeGreaterThan(3);
+expect(x).toBeNull();</code></pre>
+
+<h2>Lifecycle hooks</h2>
+<pre><code>import { beforeAll, afterAll, beforeEach, afterEach } from "bun:test";
+
+beforeAll(() =&gt; { /* once before all tests in the file */ });
+afterAll(() =&gt; { /* once after all */ });
+beforeEach(() =&gt; { /* before each test */ });
+afterEach(() =&gt; { /* after each test */ });</code></pre>
+
+<h2>Mocks &amp; spies</h2>
+<pre><code>import { mock, spyOn, test, expect } from "bun:test";
+
+// a mock function
+const fn = mock((x: number) =&gt; x * 2);
+fn(21);
+expect(fn).toHaveBeenCalledTimes(1);
+expect(fn).toHaveBeenCalledWith(21);
+expect(fn.mock.results[0].value).toBe(42);
+
+// spy on an existing method
+const obj = { greet: (n: string) =&gt; `hi ${n}` };
+const spy = spyOn(obj, "greet");
+obj.greet("Ada");
+expect(spy).toHaveBeenCalledWith("Ada");
+
+// module mock
+mock.module("./config", () =&gt; ({ default: { env: "test" } }));</code></pre>
+
+<h2>Snapshots</h2>
+<pre><code>test("renders", () =&gt; {
+  const output = render({ title: "Bun" });
+  expect(output).toMatchSnapshot();     // writes __snapshots__ on first run
+});</code></pre>
+<pre><code>bun test --update-snapshots      # accept new snapshots</code></pre>
+
+<h2>Skip, only, todo, and conditionals</h2>
+<pre><code>test.skip("not yet", () =&gt; {});
+test.only("focus on this", () =&gt; {});
+test.todo("write me later");
+test.each([[1, 1], [2, 4], [3, 9]])("square(%i) = %i", (n, sq) =&gt; {
+  expect(n * n).toBe(sq);
+});</code></pre>
+
+<h2>Preloading setup</h2>
+<pre><code># bunfig.toml
+[test]
+preload = ["./test/setup.ts"]      # runs before the suite</code></pre>

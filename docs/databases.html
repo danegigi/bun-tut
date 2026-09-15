@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Databases: SQLite & SQL — Bun Tutorial</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --text:#e6edf3; --muted:#8b949e;
+  --accent:#fbf0df; --accent-2:#f472b6; --code-bg:#0b0f14; --border:#30363d;
+  --link:#f9a8d4;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+header.nav{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:10px 20px}
+header.nav .brand{font-weight:700;color:var(--accent);font-size:15px}
+header.nav a.home{margin-left:auto;font-size:14px;color:var(--muted)}
+.wrap{max-width:940px;margin:0 auto;padding:28px 20px 120px}
+h1.page-title{font-size:2rem;margin:.2em 0 .3em;color:var(--accent);line-height:1.2}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-top:.6em;border-top:1px solid var(--border);scroll-margin-top:70px}
+h3{font-size:1.12rem;margin:1.6em 0 .4em;color:var(--accent);scroll-margin-top:70px}
+p,li{color:var(--text)}
+.verify{display:block;border-left:3px solid #d29922;background:#231f16;padding:10px 14px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14px;color:#e3b341}
+.note{border-left:3px solid var(--accent-2);background:var(--panel);padding:12px 16px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14.5px}
+.ref{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:.2em 0 1.4em;font-size:14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:9px 13px}
+nav.toc{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin:1.6em 0}
+nav.toc strong{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+nav.toc ul{margin:0;padding:0;list-style:none;column-gap:28px;columns:2}
+nav.toc li{margin:5px 0;break-inside:avoid}
+nav.toc li.lvl3{padding-left:14px;font-size:14px}
+pre{position:relative;background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:16px 18px;overflow:auto;font-size:13.5px;line-height:1.55}
+code{font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+:not(pre)>code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:.9em;color:#ffd9ec}
+table{border-collapse:collapse;width:100%;margin:1.2em 0;font-size:14px;display:block;overflow:auto}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--panel);color:var(--accent)}
+pre .copy{position:absolute;top:8px;right:8px;opacity:0;transition:.15s;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+pre:hover .copy{opacity:1}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:3em;border-top:1px solid var(--border);padding-top:1.4em}
+.pager a{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 16px;flex:1;color:var(--text)}
+.pager a.next{text-align:right}
+.pager a small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.fab{position:fixed;right:20px;z-index:30;border:none;border-radius:24px;padding:10px 16px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);font-size:14px}
+.fab.try{bottom:20px;background:var(--accent);color:#0d1117}
+.fab.top{bottom:70px;background:var(--panel);color:var(--text);border:1px solid var(--border)}
+/* landing */
+.hero{text-align:center;padding:40px 0 10px}
+.hero .logo{font-size:3rem}
+.hero h1{font-size:2.4rem;margin:.1em 0;color:var(--accent)}
+.hero p{color:var(--muted);max-width:640px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin:32px 0}
+.card{display:block;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;transition:.15s}
+.card:hover{border-color:var(--accent-2);transform:translateY(-2px);text-decoration:none}
+.card .n{color:var(--muted);font-size:12px}
+.card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
+.card p{color:var(--muted);font-size:14px;margin:0}
+@media(max-width:640px){nav.toc ul{columns:1}}
+</style>
+</head>
+<body>
+<header class="nav"><span class="brand">🥟 Bun Tutorial</span><a class="home" href="index.html">← All sections</a></header>
+<main class="wrap">
+<h1 class="page-title">🗄️ Databases: SQLite & SQL</h1>
+<div class="ref">📖 Official reference: <a href="https://bun.com/docs/api/sql" target="_blank" rel="noopener">bun.com/docs/api/sql</a></div>
+<nav class="toc"><strong>On this page</strong><ul>
+<li class="lvl2"><a href="#bunsqlite-the-low-level-sqlite-driver">bun:sqlite — the low-level SQLite driver</a></li>
+<li class="lvl3"><a href="#transactions">Transactions</a></li>
+<li class="lvl2"><a href="#bunsql-unified-sql-client">Bun.sql — unified SQL client</a></li>
+<li class="lvl3"><a href="#inserting-the-sql-helper">Inserting &amp; the sql() helper</a></li>
+<li class="lvl3"><a href="#result-formats">Result formats</a></li>
+<li class="lvl3"><a href="#dynamic-fragments-safely">Dynamic fragments (safely)</a></li>
+<li class="lvl3"><a href="#transactions-savepoints">Transactions &amp; savepoints</a></li>
+<li class="lvl3"><a href="#connection-pooling-reserved-connections">Connection pooling &amp; reserved connections</a></li>
+<li class="lvl3"><a href="#listen-notify-postgresql">LISTEN / NOTIFY (PostgreSQL)</a></li>
+<li class="lvl3"><a href="#typed-errors">Typed errors</a></li>
+</ul></nav>
+<p>Bun has two built-in database APIs: <code>bun:sqlite</code>, a fast low-level SQLite driver, and <code>Bun.sql</code> (via <code>Bun.SQL</code>), a unified Promise-based client for <strong>PostgreSQL, MySQL, and SQLite</strong> using tagged-template queries.</p>
+
+<h2 id="bunsqlite-the-low-level-sqlite-driver">bun:sqlite — the low-level SQLite driver</h2>
+<pre><code>import { Database } from "bun:sqlite";
+
+const db = new Database("app.db");           // or ":memory:"
+db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)");
+
+// Prepared statements (reused, fast)
+const insert = db.query("INSERT INTO users (name) VALUES (?)");
+insert.run("Alice");
+insert.run("Bob");
+
+// Query rows
+const all = db.query("SELECT * FROM users").all();       // [{id,name}, ...]
+const one = db.query("SELECT * FROM users WHERE id = ?").get(1);
+const names = db.query("SELECT name FROM users").values(); // [["Alice"], ...]
+
+// Named parameters
+db.query("SELECT * FROM users WHERE name = $name").all({ $name: "Alice" });</code></pre>
+
+<h3 id="transactions">Transactions</h3>
+<pre><code>const insertMany = db.transaction((people) =&gt; {
+  for (const name of people) insert.run(name);
+});
+insertMany(["Carol", "Dave", "Eve"]);   // all-or-nothing</code></pre>
+<div class="note">Enable WAL mode for better concurrency: <code>db.run("PRAGMA journal_mode = WAL")</code>. Use <code>bun:sqlite</code> when you want direct, synchronous SQLite access; use <code>Bun.sql</code> below when you want one API across databases.</div>
+
+<h2 id="bunsql-unified-sql-client">Bun.sql — unified SQL client</h2>
+<p>The same tagged-template interface targets Postgres (default), MySQL, or SQLite, chosen from the connection string. Values in <code>${...}</code> are always parameterized — safe against SQL injection.</p>
+<pre><code>import { sql, SQL } from "bun";
+
+// PostgreSQL (default) — uses DATABASE_URL / POSTGRES_URL env vars
+const users = await sql`SELECT * FROM users WHERE active = ${true} LIMIT ${10}`;
+
+// MySQL
+const mysql = new SQL("mysql://user:pass@localhost:3306/mydb");
+await mysql`SELECT * FROM users WHERE id = ${42}`;
+
+// SQLite
+const lite = new SQL("sqlite://app.db");
+await lite`SELECT * FROM users WHERE id = ${1}`;</code></pre>
+
+<h3 id="inserting-the-sql-helper">Inserting &amp; the sql() helper</h3>
+<pre><code>const user = { name: "Alice", email: "alice@example.com" };
+
+// object helper expands to (name, email) VALUES (...)
+const [created] = await sql`INSERT INTO users ${sql(user)} RETURNING *`;
+
+// bulk insert from an array of objects
+const many = [{ name: "Bob" }, { name: "Carol" }];
+await sql`INSERT INTO users ${sql(many)}`;
+
+// pick columns
+await sql`INSERT INTO users ${sql(user, "name")}`;   // name only</code></pre>
+
+<h3 id="result-formats">Result formats</h3>
+<pre><code>await sql`SELECT * FROM users`;          // [{ name, email }, ...]  (default: objects)
+await sql`SELECT * FROM users`.values(); // [["Alice","a@x"], ...]  (arrays)
+await sql`SELECT * FROM users`.raw();    // [[Buffer, Buffer], ...] (binary)</code></pre>
+
+<h3 id="dynamic-fragments-safely">Dynamic fragments (safely)</h3>
+<pre><code>const minAge = 21;
+const ageFilter = sql`AND age &gt; ${minAge}`;
+await sql`
+  SELECT * FROM users
+  WHERE active = ${true}
+  ${wantAge ? ageFilter : sql``}
+`;
+
+// dynamic table name (escaped)
+await sql`SELECT * FROM ${sql("users")}`;
+
+// WHERE IN
+await sql`SELECT * FROM users WHERE id IN ${sql([1, 2, 3])}`;</code></pre>
+
+<h3 id="transactions-savepoints">Transactions &amp; savepoints</h3>
+<pre><code>await sql.begin(async (tx) =&gt; {
+  await tx`INSERT INTO users (name) VALUES (${"Alice"})`;
+  await tx`UPDATE accounts SET balance = balance - 100 WHERE user_id = 1`;
+  // auto-COMMIT on success, auto-ROLLBACK on throw
+
+  await tx.savepoint(async (sp) =&gt; {
+    await sp`UPDATE users SET status = 'active'`;
+    // can roll back to here independently
+  });
+});</code></pre>
+
+<h3 id="connection-pooling-reserved-connections">Connection pooling &amp; reserved connections</h3>
+<pre><code>const pool = new SQL({ max: 20, idleTimeout: 30 });
+
+// exclusive connection from the pool
+using reserved = await pool.reserve();
+await reserved`SELECT 1`;         // auto-released at scope end
+
+await pool.close();               // drain and close</code></pre>
+
+<h3 id="listen-notify-postgresql">LISTEN / NOTIFY (PostgreSQL)</h3>
+<pre><code>const sub = await sql.listen("orders", (payload) =&gt; {
+  console.log("new order", JSON.parse(payload));
+});
+await sql.notify("orders", JSON.stringify({ id: 42 }));
+await sub.unlisten();</code></pre>
+
+<h3 id="typed-errors">Typed errors</h3>
+<pre><code>try {
+  await sql`INSERT INTO users (id) VALUES (1)`;
+} catch (err) {
+  if (err instanceof SQL.PostgresError) console.log(err.code, err.detail);
+  else if (err instanceof SQL.SQLiteError) console.log(err.code, err.errno);
+}</code></pre>
+<div class="note">Large integers: Postgres <code>bigint</code> and out-of-range MySQL <code>BIGINT</code> come back as strings by default to avoid precision loss. Pass <code>{ bigint: true }</code> to the client to get real <code>BigInt</code> values instead.</div>
+
+<div class="pager">
+<a class="prev" href="shell-terminal-cron.html"><small>Previous</small>🖥️ Shell, Terminal, Spawn & Cron</a>
+<a class="next" href="test-runner.html"><small>Next</small>✅ Test Runner</a>
+</div>
+</main>
+<button class="fab try" onclick="window.open('https://bun.com/repl','_blank')">▶ Try in Bun</button>
+<button class="fab top" onclick="scrollTo({top:0,behavior:'smooth'})">↑ Top</button>
+<script>
+document.querySelectorAll('pre').forEach(function(pre){
+  var b=document.createElement('button');b.className='copy';b.textContent='Copy';
+  b.addEventListener('click',function(){
+    var t=pre.querySelector('code')?pre.querySelector('code').innerText:pre.innerText;
+    navigator.clipboard.writeText(t.replace(/Copy$/,''));
+    b.textContent='Copied!';setTimeout(function(){b.textContent='Copy'},1500);
+  });
+  pre.appendChild(b);
+});
+</script>
+</body>
+</html>

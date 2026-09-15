@@ -1,0 +1,49 @@
+<p>The <code>bun</code> CLI is the entry point to the runtime. It runs files and scripts, watches for changes, and hot-reloads a running server.</p>
+
+<h2>Running code</h2>
+<pre><code>bun run index.ts        # run a file
+bun index.ts            # "run" is optional for files
+bun run dev             # run a package.json script
+bun --print "1 + 1"     # evaluate and print an expression -> 2
+bun -e 'console.log(Bun.version)'   # evaluate a snippet</code></pre>
+
+<h2>Watch vs hot reload</h2>
+<p><code>--watch</code> restarts the whole process on file change. <code>--hot</code> reloads modules <em>in place</em>, keeping state and open sockets (ideal for servers).</p>
+<pre><code>bun --watch script.ts      # restart on change (CLIs, scripts)
+bun --hot server.ts        # hot-reload modules, keep the server up</code></pre>
+<div class="note">Under <code>--hot</code>, long-lived resources like <code>Bun.serve()</code> and in-process <code>Bun.cron()</code> jobs are re-registered cleanly on each reload — no leaked timers or dropped connections.</div>
+
+<h2>Shebang scripts</h2>
+<p>Make a TypeScript file directly executable:</p>
+<pre><code>#!/usr/bin/env bun
+// tool.ts
+console.log("args:", Bun.argv.slice(2));</code></pre>
+<pre><code>chmod +x tool.ts
+./tool.ts a b c        # args: [ "a", "b", "c" ]</code></pre>
+
+<h2>Useful flags</h2>
+<table>
+<tr><th>Flag</th><th>What it does</th></tr>
+<tr><td><code>--watch</code></td><td>Restart process on file change</td></tr>
+<tr><td><code>--hot</code></td><td>Hot-reload modules, preserve state</td></tr>
+<tr><td><code>--print</code> / <code>-e</code></td><td>Evaluate an expression / snippet</td></tr>
+<tr><td><code>--filter</code></td><td>Run a script across matching workspaces</td></tr>
+<tr><td><code>--env-file=.env.prod</code></td><td>Load a specific env file</td></tr>
+<tr><td><code>--smol</code></td><td>Reduce memory use (smaller heap)</td></tr>
+<tr><td><code>--sql-preconnect</code></td><td>Open a PostgreSQL connection at startup</td></tr>
+</table>
+
+<h2>Reading input</h2>
+<pre><code>// Read all of stdin
+const input = await Bun.stdin.text();
+console.log("got", input.length, "chars");
+
+// Arguments
+const [, , cmd, ...rest] = Bun.argv;   // skip bun + script
+console.log({ cmd, rest });</code></pre>
+
+<h2>Runtime info</h2>
+<pre><code>Bun.version      // "1.4.2"
+Bun.revision     // git sha of the build
+Bun.main         // absolute path of the entry file
+Bun.env.NODE_ENV // environment</code></pre>

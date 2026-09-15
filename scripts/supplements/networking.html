@@ -1,0 +1,121 @@
+<p>Bun ships fast, native networking: an HTTP server, WebSockets, raw TCP and UDP sockets, a standard <code>fetch</code>, and Web <code>Worker</code>s for CPU-bound work.</p>
+
+<h2>Bun.serve — HTTP server</h2>
+<p>The modern API uses a <code>routes</code> object with path params and per-method handlers. <code>req.params</code> holds matched segments.</p>
+<pre><code>const server = Bun.serve({
+  port: 3000,
+  routes: {
+    "/": () =&gt; new Response("Hello, Bun!"),
+
+    "/users/:id": (req) =&gt; {
+      return Response.json({ id: req.params.id });
+    },
+
+    "/api/echo": {
+      POST: async (req) =&gt; Response.json(await req.json()),
+    },
+  },
+  // fallback for unmatched routes
+  fetch() {
+    return new Response("Not found", { status: 404 });
+  },
+});
+
+console.log(`Listening on ${server.url}`);   // http://localhost:3000</code></pre>
+
+<h2>Static responses &amp; streaming</h2>
+<pre><code>Bun.serve({
+  routes: {
+    // serve a file straight from disk (uses sendfile under the hood)
+    "/logo.png": () =&gt; new Response(Bun.file("./assets/logo.png")),
+
+    // stream a response
+    "/stream": () =&gt; new Response(
+      new ReadableStream({
+        start(c) {
+          c.enqueue("chunk 1\n");
+          c.enqueue("chunk 2\n");
+          c.close();
+        },
+      }),
+      { headers: { "Content-Type": "text/plain" } },
+    ),
+  },
+});</code></pre>
+
+<h2>WebSockets</h2>
+<p>Return <code>undefined</code> from <code>fetch</code> after <code>server.upgrade(req)</code> to hand the connection to the <code>websocket</code> handlers.</p>
+<pre><code>Bun.serve({
+  port: 3001,
+  fetch(req, server) {
+    if (server.upgrade(req)) return;      // upgraded — no Response needed
+    return new Response("Use a WebSocket client");
+  },
+  websocket: {
+    open(ws) { ws.subscribe("room"); ws.send("welcome"); },
+    message(ws, msg) { ws.publish("room", `broadcast: ${msg}`); },
+    close(ws) { ws.unsubscribe("room"); },
+  },
+});</code></pre>
+<p><code>subscribe</code>/<code>publish</code> is Bun's built-in pub/sub — great for chat and live updates without extra libraries.</p>
+
+<h2>TCP sockets</h2>
+<pre><code>// Server
+Bun.listen({
+  hostname: "localhost",
+  port: 8080,
+  socket: {
+    open(socket) { socket.write("hi\n"); },
+    data(socket, data) { socket.write(data); },   // echo
+    close() { console.log("client gone"); },
+  },
+});
+
+// Client
+const client = await Bun.connect({
+  hostname: "localhost",
+  port: 8080,
+  socket: {
+    data(socket, data) { console.log("got", data.toString()); },
+  },
+});</code></pre>
+
+<h2>UDP sockets</h2>
+<pre><code>const udp = await Bun.udpSocket({
+  socket: {
+    data(socket, buf, port, addr) {
+      console.log(`from ${addr}:${port}`, buf.toString());
+    },
+  },
+});
+udp.send("ping", 41234, "127.0.0.1");</code></pre>
+
+<h2>fetch</h2>
+<p>The standard Web <code>fetch</code> — plus Bun extensions like the <code>s3://</code> protocol and <code>unix</code> sockets.</p>
+<pre><code>const res = await fetch("https://api.github.com/repos/oven-sh/bun");
+const repo = await res.json();
+console.log(repo.stargazers_count);
+
+// POST JSON
+await fetch("https://httpbin.org/post", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ hello: "world" }),
+});</code></pre>
+
+<h2>Workers — offload CPU work</h2>
+<p>Use a <code>Worker</code> to keep the main thread responsive during heavy computation.</p>
+<pre><code>// worker.ts
+self.onmessage = (e) =&gt; {
+  const n = e.data;
+  let sum = 0;
+  for (let i = 0; i &lt; n; i++) sum += i;
+  postMessage(sum);
+};</code></pre>
+<pre><code>// main.ts
+const worker = new Worker(new URL("./worker.ts", import.meta.url).href);
+worker.postMessage(1_000_000_000);
+worker.onmessage = (e) =&gt; {
+  console.log("sum =", e.data);
+  worker.terminate();
+};</code></pre>

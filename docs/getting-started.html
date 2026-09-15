@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getting Started — Bun Tutorial</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --text:#e6edf3; --muted:#8b949e;
+  --accent:#fbf0df; --accent-2:#f472b6; --code-bg:#0b0f14; --border:#30363d;
+  --link:#f9a8d4;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+header.nav{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:10px 20px}
+header.nav .brand{font-weight:700;color:var(--accent);font-size:15px}
+header.nav a.home{margin-left:auto;font-size:14px;color:var(--muted)}
+.wrap{max-width:940px;margin:0 auto;padding:28px 20px 120px}
+h1.page-title{font-size:2rem;margin:.2em 0 .3em;color:var(--accent);line-height:1.2}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-top:.6em;border-top:1px solid var(--border);scroll-margin-top:70px}
+h3{font-size:1.12rem;margin:1.6em 0 .4em;color:var(--accent);scroll-margin-top:70px}
+p,li{color:var(--text)}
+.verify{display:block;border-left:3px solid #d29922;background:#231f16;padding:10px 14px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14px;color:#e3b341}
+.note{border-left:3px solid var(--accent-2);background:var(--panel);padding:12px 16px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14.5px}
+.ref{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:.2em 0 1.4em;font-size:14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:9px 13px}
+nav.toc{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin:1.6em 0}
+nav.toc strong{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+nav.toc ul{margin:0;padding:0;list-style:none;column-gap:28px;columns:2}
+nav.toc li{margin:5px 0;break-inside:avoid}
+nav.toc li.lvl3{padding-left:14px;font-size:14px}
+pre{position:relative;background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:16px 18px;overflow:auto;font-size:13.5px;line-height:1.55}
+code{font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+:not(pre)>code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:.9em;color:#ffd9ec}
+table{border-collapse:collapse;width:100%;margin:1.2em 0;font-size:14px;display:block;overflow:auto}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--panel);color:var(--accent)}
+pre .copy{position:absolute;top:8px;right:8px;opacity:0;transition:.15s;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+pre:hover .copy{opacity:1}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:3em;border-top:1px solid var(--border);padding-top:1.4em}
+.pager a{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 16px;flex:1;color:var(--text)}
+.pager a.next{text-align:right}
+.pager a small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.fab{position:fixed;right:20px;z-index:30;border:none;border-radius:24px;padding:10px 16px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);font-size:14px}
+.fab.try{bottom:20px;background:var(--accent);color:#0d1117}
+.fab.top{bottom:70px;background:var(--panel);color:var(--text);border:1px solid var(--border)}
+/* landing */
+.hero{text-align:center;padding:40px 0 10px}
+.hero .logo{font-size:3rem}
+.hero h1{font-size:2.4rem;margin:.1em 0;color:var(--accent)}
+.hero p{color:var(--muted);max-width:640px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin:32px 0}
+.card{display:block;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;transition:.15s}
+.card:hover{border-color:var(--accent-2);transform:translateY(-2px);text-decoration:none}
+.card .n{color:var(--muted);font-size:12px}
+.card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
+.card p{color:var(--muted);font-size:14px;margin:0}
+@media(max-width:640px){nav.toc ul{columns:1}}
+</style>
+</head>
+<body>
+<header class="nav"><span class="brand">🥟 Bun Tutorial</span><a class="home" href="index.html">← All sections</a></header>
+<main class="wrap">
+<h1 class="page-title">🚀 Getting Started</h1>
+<div class="ref">📖 Official reference: <a href="https://bun.com/docs/installation" target="_blank" rel="noopener">bun.com/docs/installation</a></div>
+<nav class="toc"><strong>On this page</strong><ul>
+<li class="lvl2"><a href="#install">Install</a></li>
+<li class="lvl2"><a href="#create-a-project">Create a project</a></li>
+<li class="lvl2"><a href="#run-typescript-natively">Run TypeScript natively</a></li>
+<li class="lvl2"><a href="#bunfigtoml">bunfig.toml</a></li>
+<li class="lvl2"><a href="#environment-variables">Environment variables</a></li>
+<li class="lvl2"><a href="#a-first-real-program">A first real program</a></li>
+</ul></nav>
+<p>Bun is an all-in-one JavaScript &amp; TypeScript runtime, package manager, bundler, and test runner. It runs <code>.ts</code> and <code>.tsx</code> files directly — no compile step — and ships a large native standard library under the global <code>Bun</code> namespace. This tutorial targets <strong>Bun 1.4.2</strong>.</p>
+
+<h2 id="install">Install</h2>
+<pre><code># macOS / Linux
+curl -fsSL https://bun.com/install | bash
+
+# Homebrew
+brew install oven-sh/bun/bun
+
+# Windows (PowerShell)
+powershell -c "irm bun.com/install.ps1 | iex"
+
+# Check it
+bun --version   # 1.4.2</code></pre>
+
+<h2 id="create-a-project">Create a project</h2>
+<pre><code>bun init            # interactive scaffold: package.json, index.ts, tsconfig, .gitignore
+bun init -y         # accept all defaults</code></pre>
+<p>A fresh <code>index.ts</code> runs with:</p>
+<pre><code>bun run index.ts
+# or just
+bun index.ts</code></pre>
+
+<h2 id="run-typescript-natively">Run TypeScript natively</h2>
+<p>Bun executes TypeScript and JSX with no <code>tsc</code>, <code>ts-node</code>, or <code>tsx</code> shim. Type <em>checking</em> is separate — Bun strips types to run fast; use <code>bunx tsc --noEmit</code> when you want type errors.</p>
+<pre><code>// hello.ts
+const name: string = "world";
+console.log(`Hello, ${name}!`);</code></pre>
+<pre><code>bun hello.ts        # Hello, world!</code></pre>
+
+<h2 id="bunfigtoml">bunfig.toml</h2>
+<p>Project (or global <code>~/.bunfig.toml</code>) config. A minimal example:</p>
+<pre><code># bunfig.toml
+[install]
+# use an alternate registry
+registry = "https://registry.npmjs.org"
+
+[test]
+# preload a setup file before tests
+preload = ["./test/setup.ts"]
+
+[run]
+# silence the "$ bun run ..." echo
+silent = true</code></pre>
+
+<h2 id="environment-variables">Environment variables</h2>
+<p>Bun auto-loads <code>.env</code>, <code>.env.local</code>, <code>.env.&lt;NODE_ENV&gt;</code> without <code>dotenv</code>. Read them via <code>Bun.env</code> (or <code>process.env</code>).</p>
+<pre><code># .env
+API_URL=https://api.example.com
+PORT=3000</code></pre>
+<pre><code>console.log(Bun.env.API_URL);        // https://api.example.com
+console.log(process.env.PORT);       // 3000  (same values)</code></pre>
+<div class="note">Precedence: real environment variables override <code>.env.local</code>, which overrides <code>.env</code>. Never commit secrets — keep them in <code>.env.local</code> (gitignored) and reference by name.</div>
+
+<h2 id="a-first-real-program">A first real program</h2>
+<pre><code>// greet.ts
+const who = Bun.argv[2] ?? "world";      // Bun.argv[0]=bun, [1]=script
+console.log(`Hello, ${who}!`);
+console.log(`Running on Bun ${Bun.version} (${Bun.revision.slice(0, 7)})`);</code></pre>
+<pre><code>bun greet.ts Ada
+# Hello, Ada!
+# Running on Bun 1.4.2 (…)</code></pre>
+
+<div class="pager">
+<a class="prev" href="index.html"><small>Home</small>All sections</a>
+<a class="next" href="package-manager.html"><small>Next</small>📦 Package Manager</a>
+</div>
+</main>
+<button class="fab try" onclick="window.open('https://bun.com/repl','_blank')">▶ Try in Bun</button>
+<button class="fab top" onclick="scrollTo({top:0,behavior:'smooth'})">↑ Top</button>
+<script>
+document.querySelectorAll('pre').forEach(function(pre){
+  var b=document.createElement('button');b.className='copy';b.textContent='Copy';
+  b.addEventListener('click',function(){
+    var t=pre.querySelector('code')?pre.querySelector('code').innerText:pre.innerText;
+    navigator.clipboard.writeText(t.replace(/Copy$/,''));
+    b.textContent='Copied!';setTimeout(function(){b.textContent='Copy'},1500);
+  });
+  pre.appendChild(b);
+});
+</script>
+</body>
+</html>

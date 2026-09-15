@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLI & Runtime — Bun Tutorial</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --text:#e6edf3; --muted:#8b949e;
+  --accent:#fbf0df; --accent-2:#f472b6; --code-bg:#0b0f14; --border:#30363d;
+  --link:#f9a8d4;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+header.nav{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:10px 20px}
+header.nav .brand{font-weight:700;color:var(--accent);font-size:15px}
+header.nav a.home{margin-left:auto;font-size:14px;color:var(--muted)}
+.wrap{max-width:940px;margin:0 auto;padding:28px 20px 120px}
+h1.page-title{font-size:2rem;margin:.2em 0 .3em;color:var(--accent);line-height:1.2}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-top:.6em;border-top:1px solid var(--border);scroll-margin-top:70px}
+h3{font-size:1.12rem;margin:1.6em 0 .4em;color:var(--accent);scroll-margin-top:70px}
+p,li{color:var(--text)}
+.verify{display:block;border-left:3px solid #d29922;background:#231f16;padding:10px 14px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14px;color:#e3b341}
+.note{border-left:3px solid var(--accent-2);background:var(--panel);padding:12px 16px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14.5px}
+.ref{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:.2em 0 1.4em;font-size:14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:9px 13px}
+nav.toc{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin:1.6em 0}
+nav.toc strong{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+nav.toc ul{margin:0;padding:0;list-style:none;column-gap:28px;columns:2}
+nav.toc li{margin:5px 0;break-inside:avoid}
+nav.toc li.lvl3{padding-left:14px;font-size:14px}
+pre{position:relative;background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:16px 18px;overflow:auto;font-size:13.5px;line-height:1.55}
+code{font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+:not(pre)>code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:.9em;color:#ffd9ec}
+table{border-collapse:collapse;width:100%;margin:1.2em 0;font-size:14px;display:block;overflow:auto}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--panel);color:var(--accent)}
+pre .copy{position:absolute;top:8px;right:8px;opacity:0;transition:.15s;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+pre:hover .copy{opacity:1}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:3em;border-top:1px solid var(--border);padding-top:1.4em}
+.pager a{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 16px;flex:1;color:var(--text)}
+.pager a.next{text-align:right}
+.pager a small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.fab{position:fixed;right:20px;z-index:30;border:none;border-radius:24px;padding:10px 16px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);font-size:14px}
+.fab.try{bottom:20px;background:var(--accent);color:#0d1117}
+.fab.top{bottom:70px;background:var(--panel);color:var(--text);border:1px solid var(--border)}
+/* landing */
+.hero{text-align:center;padding:40px 0 10px}
+.hero .logo{font-size:3rem}
+.hero h1{font-size:2.4rem;margin:.1em 0;color:var(--accent)}
+.hero p{color:var(--muted);max-width:640px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin:32px 0}
+.card{display:block;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;transition:.15s}
+.card:hover{border-color:var(--accent-2);transform:translateY(-2px);text-decoration:none}
+.card .n{color:var(--muted);font-size:12px}
+.card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
+.card p{color:var(--muted);font-size:14px;margin:0}
+@media(max-width:640px){nav.toc ul{columns:1}}
+</style>
+</head>
+<body>
+<header class="nav"><span class="brand">🥟 Bun Tutorial</span><a class="home" href="index.html">← All sections</a></header>
+<main class="wrap">
+<h1 class="page-title">⚡ CLI & Runtime</h1>
+<div class="ref">📖 Official reference: <a href="https://bun.com/docs/cli/run" target="_blank" rel="noopener">bun.com/docs/cli/run</a></div>
+<nav class="toc"><strong>On this page</strong><ul>
+<li class="lvl2"><a href="#running-code">Running code</a></li>
+<li class="lvl2"><a href="#watch-vs-hot-reload">Watch vs hot reload</a></li>
+<li class="lvl2"><a href="#shebang-scripts">Shebang scripts</a></li>
+<li class="lvl2"><a href="#useful-flags">Useful flags</a></li>
+<li class="lvl2"><a href="#reading-input">Reading input</a></li>
+<li class="lvl2"><a href="#runtime-info">Runtime info</a></li>
+</ul></nav>
+<p>The <code>bun</code> CLI is the entry point to the runtime. It runs files and scripts, watches for changes, and hot-reloads a running server.</p>
+
+<h2 id="running-code">Running code</h2>
+<pre><code>bun run index.ts        # run a file
+bun index.ts            # "run" is optional for files
+bun run dev             # run a package.json script
+bun --print "1 + 1"     # evaluate and print an expression -> 2
+bun -e 'console.log(Bun.version)'   # evaluate a snippet</code></pre>
+
+<h2 id="watch-vs-hot-reload">Watch vs hot reload</h2>
+<p><code>--watch</code> restarts the whole process on file change. <code>--hot</code> reloads modules <em>in place</em>, keeping state and open sockets (ideal for servers).</p>
+<pre><code>bun --watch script.ts      # restart on change (CLIs, scripts)
+bun --hot server.ts        # hot-reload modules, keep the server up</code></pre>
+<div class="note">Under <code>--hot</code>, long-lived resources like <code>Bun.serve()</code> and in-process <code>Bun.cron()</code> jobs are re-registered cleanly on each reload — no leaked timers or dropped connections.</div>
+
+<h2 id="shebang-scripts">Shebang scripts</h2>
+<p>Make a TypeScript file directly executable:</p>
+<pre><code>#!/usr/bin/env bun
+// tool.ts
+console.log("args:", Bun.argv.slice(2));</code></pre>
+<pre><code>chmod +x tool.ts
+./tool.ts a b c        # args: [ "a", "b", "c" ]</code></pre>
+
+<h2 id="useful-flags">Useful flags</h2>
+<table>
+<tr><th>Flag</th><th>What it does</th></tr>
+<tr><td><code>--watch</code></td><td>Restart process on file change</td></tr>
+<tr><td><code>--hot</code></td><td>Hot-reload modules, preserve state</td></tr>
+<tr><td><code>--print</code> / <code>-e</code></td><td>Evaluate an expression / snippet</td></tr>
+<tr><td><code>--filter</code></td><td>Run a script across matching workspaces</td></tr>
+<tr><td><code>--env-file=.env.prod</code></td><td>Load a specific env file</td></tr>
+<tr><td><code>--smol</code></td><td>Reduce memory use (smaller heap)</td></tr>
+<tr><td><code>--sql-preconnect</code></td><td>Open a PostgreSQL connection at startup</td></tr>
+</table>
+
+<h2 id="reading-input">Reading input</h2>
+<pre><code>// Read all of stdin
+const input = await Bun.stdin.text();
+console.log("got", input.length, "chars");
+
+// Arguments
+const [, , cmd, ...rest] = Bun.argv;   // skip bun + script
+console.log({ cmd, rest });</code></pre>
+
+<h2 id="runtime-info">Runtime info</h2>
+<pre><code>Bun.version      // "1.4.2"
+Bun.revision     // git sha of the build
+Bun.main         // absolute path of the entry file
+Bun.env.NODE_ENV // environment</code></pre>
+
+<div class="pager">
+<a class="prev" href="package-manager.html"><small>Previous</small>📦 Package Manager</a>
+<a class="next" href="networking.html"><small>Next</small>🌐 Networking</a>
+</div>
+</main>
+<button class="fab try" onclick="window.open('https://bun.com/repl','_blank')">▶ Try in Bun</button>
+<button class="fab top" onclick="scrollTo({top:0,behavior:'smooth'})">↑ Top</button>
+<script>
+document.querySelectorAll('pre').forEach(function(pre){
+  var b=document.createElement('button');b.className='copy';b.textContent='Copy';
+  b.addEventListener('click',function(){
+    var t=pre.querySelector('code')?pre.querySelector('code').innerText:pre.innerText;
+    navigator.clipboard.writeText(t.replace(/Copy$/,''));
+    b.textContent='Copied!';setTimeout(function(){b.textContent='Copy'},1500);
+  });
+  pre.appendChild(b);
+});
+</script>
+</body>
+</html>

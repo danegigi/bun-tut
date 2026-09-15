@@ -1,0 +1,49 @@
+<p>Bun's file API is built on the Web <code>Blob</code> interface. <code>Bun.file(path)</code> returns a lazy <code>BunFile</code> — nothing is read until you call a method — and <code>Bun.write()</code> writes almost anything to almost anywhere.</p>
+
+<h2>Reading files</h2>
+<pre><code>const file = Bun.file("./data.json");   // lazy — no read yet
+
+await file.text();          // string
+await file.json();          // parsed JSON
+await file.bytes();         // Uint8Array
+await file.arrayBuffer();   // ArrayBuffer
+file.stream();              // ReadableStream
+
+// metadata (no full read)
+file.size;                  // bytes
+file.type;                  // MIME type inferred from extension
+await file.exists();        // boolean</code></pre>
+
+<h2>Partial reads</h2>
+<pre><code>const head = Bun.file("big.log").slice(0, 1024);   // first 1 KB
+console.log(await head.text());</code></pre>
+
+<h2>Writing files</h2>
+<p><code>Bun.write(dest, data)</code> accepts a path, a <code>BunFile</code>, or an fd as the destination, and a string, bytes, <code>Blob</code>, <code>Response</code>, or another <code>BunFile</code> as the data.</p>
+<pre><code>await Bun.write("out.txt", "Hello!");
+await Bun.write("copy.json", Bun.file("data.json"));      // copy a file
+await Bun.write("page.html", await fetch("https://example.com")); // save a response
+await Bun.write("bytes.bin", new Uint8Array([1, 2, 3]));</code></pre>
+
+<h2>Incremental writing</h2>
+<p>For streaming or many small writes, use a writer:</p>
+<pre><code>const writer = Bun.file("log.txt").writer();
+writer.write("line 1\n");
+writer.write("line 2\n");
+await writer.flush();     // push buffered data
+await writer.end();       // close</code></pre>
+
+<h2>Standard streams</h2>
+<pre><code>const input = await Bun.stdin.text();       // read all stdin
+await Bun.write(Bun.stdout, "to stdout\n");  // write to stdout
+await Bun.write(Bun.stderr, "to stderr\n");</code></pre>
+
+<h2>The s3:// protocol</h2>
+<p>The same <code>Bun.file</code> and <code>fetch</code> APIs transparently target S3-compatible storage — so dev-time local-file code works unchanged in production. (Full S3 details are in the <a href="web-hono-auth.html">Web Dev</a> section.)</p>
+<pre><code>// Read an object from S3 with the same API as a local file
+const remote = Bun.file("s3://my-bucket/report.json");
+const data = await remote.json();
+
+// fetch works too
+const res = await fetch("s3://my-bucket/report.json");</code></pre>
+<div class="note">Credentials come from <code>S3_*</code> / <code>AWS_*</code> environment variables (or an explicit <code>s3:</code> options object). See the Web Dev section for <code>Bun.S3Client</code>, presigned URLs, and multipart uploads.</div>

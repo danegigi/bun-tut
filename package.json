@@ -1,0 +1,12 @@
+{
+  "name": "bun-tut",
+  "version": "1.0.0",
+  "description": "Comprehensive but approachable tutorial of Bun's built-in standard library (Bun 1.4.2), for junior→mid developers. Static GitHub Pages site.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun run scripts/build-site.js",
+    "serve": "bun run scripts/build-site.js && python3 -m http.server 8799 --bind 127.0.0.1 --directory docs"
+  },
+  "engines": { "bun": ">=1.0.0" }
+}

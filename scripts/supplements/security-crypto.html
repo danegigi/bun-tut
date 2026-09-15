@@ -1,0 +1,98 @@
+<p>Bun's security toolkit covers password hashing, fast non-cryptographic hashing, incremental cryptographic hashing/HMAC, CSRF tokens, and OS-native secret storage — all first-party, no npm packages.</p>
+
+<h2>Bun.password — hashing passwords</h2>
+<p>Argon2id by default (or bcrypt). The algorithm and salt are embedded in the hash, so <code>verify</code> figures everything out.</p>
+<pre><code>const hash = await Bun.password.hash("super-secure-pa$$word");
+// $argon2id$v=19$m=65536,t=2,p=1$...salt...$...hash...
+
+const ok = await Bun.password.verify("super-secure-pa$$word", hash);  // true
+
+// choose the algorithm / cost
+const argon = await Bun.password.hash(pw, {
+  algorithm: "argon2id", memoryCost: 65536, timeCost: 2,
+});
+const bcrypt = await Bun.password.hash(pw, { algorithm: "bcrypt", cost: 12 });
+
+// sync variants exist but block — avoid in request handlers
+Bun.password.hashSync(pw);</code></pre>
+<div class="note">Never store or log the plaintext. <code>Bun.password.hash</code> generates a random salt automatically; with bcrypt, passwords over 72 bytes are pre-hashed with SHA-512 instead of being silently truncated.</div>
+
+<h2>Bun.hash — fast non-cryptographic hashing</h2>
+<p>For hash tables, checksums, sharding — <strong>not</strong> for security. Wyhash by default.</p>
+<pre><code>Bun.hash("some data");            // 64-bit bigint
+Bun.hash("some data", 1234);      // with a seed
+
+Bun.hash.crc32("data");
+Bun.hash.xxHash64("data");
+Bun.hash.cityHash64("data");
+Bun.hash.murmur32v3("data");</code></pre>
+
+<h2>Bun.CryptoHasher — cryptographic hashing &amp; HMAC</h2>
+<pre><code>const hasher = new Bun.CryptoHasher("sha256");
+hasher.update("hello ");
+hasher.update("world");
+hasher.digest("hex");             // "b94d27b9934d3e08..."
+// digest() also accepts "base64" / "base64url", or a TypedArray to fill
+
+// HMAC — pass a key to the constructor
+const mac = new Bun.CryptoHasher("sha256", "secret-key");
+mac.update("hello world");
+mac.digest("hex");</code></pre>
+<p>Supported algorithms include <code>sha1</code>, <code>sha256</code>, <code>sha384</code>, <code>sha512</code>, the <code>sha3-*</code> family, <code>blake2b*</code>, <code>md5</code>, <code>shake128/256</code>, and more.</p>
+<div class="note">The HMAC hasher does <em>not</em> reset after <code>digest()</code> — create a new instance per message, or <code>copy()</code> before digesting.</div>
+
+<h2>Bun.CSRF — CSRF tokens</h2>
+<p>Signed, HMAC-based tokens with an issue timestamp and expiry. <strong>Always pass a <code>sessionId</code></strong> to bind a token to one user.</p>
+<pre><code>const token = Bun.CSRF.generate("my-secret", {
+  sessionId: "user-session-id",
+  expiresIn: 60 * 60 * 1000,       // 1 hour (ms)
+});
+
+const valid = Bun.CSRF.verify(token, {
+  secret: "my-secret",
+  sessionId: "user-session-id",
+});                                 // boolean</code></pre>
+<p>A typical form flow with <code>Bun.serve</code>: issue a per-session token when rendering the form, embed it in a hidden field, verify it on POST.</p>
+<pre><code>const SECRET = Bun.env.CSRF_SECRET!;
+
+Bun.serve({
+  routes: {
+    "/form": (req) =&gt; {
+      const sessionId = getSession(req);            // from your session cookie
+      const token = Bun.CSRF.generate(SECRET, { sessionId });
+      return new Response(
+        `&lt;form method="POST" action="/submit"&gt;
+           &lt;input type="hidden" name="_csrf" value="${token}"&gt;
+           &lt;button&gt;Send&lt;/button&gt;
+         &lt;/form&gt;`,
+        { headers: { "Content-Type": "text/html" } },
+      );
+    },
+    "/submit": {
+      POST: async (req) =&gt; {
+        const sessionId = getSession(req);
+        const form = await req.formData();
+        const token = form.get("_csrf");
+        if (typeof token !== "string" ||
+            !Bun.CSRF.verify(token, { secret: SECRET, sessionId })) {
+          return new Response("Invalid CSRF token", { status: 403 });
+        }
+        return new Response("OK");
+      },
+    },
+  },
+});</code></pre>
+
+<h2>Bun.secrets — OS credential storage</h2>
+<p>Store credentials in the OS keychain (macOS Keychain / Linux libsecret / Windows Credential Manager) instead of plaintext dotfiles. Ideal for CLI tools and local dev.</p>
+<pre><code>import { secrets } from "bun";
+
+let token = await secrets.get({ service: "my-cli", name: "github-token" });
+
+if (!token) {
+  token = prompt("GitHub token?")!;
+  await secrets.set({ service: "my-cli", name: "github-token", value: token });
+}
+
+await secrets.delete({ service: "my-cli", name: "github-token" });</code></pre>
+<div class="verify">⚠️ <code>Bun.secrets</code> is marked experimental in the reference and may change. It's meant for local development tools — use real secret management (or env vars) for production servers.</div>

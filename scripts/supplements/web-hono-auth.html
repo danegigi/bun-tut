@@ -1,0 +1,174 @@
+<p>This section builds a small web app on Bun: routing and middleware with Hono, a JWT auth flow with refresh tokens stored in HttpOnly cookies, an SSO (OAuth2/OIDC) login, and object storage with the built-in <code>Bun.s3</code>.</p>
+<div class="note">Hono is a third-party framework (not a Bun builtin) but pairs perfectly with Bun's <code>Bun.serve</code>. Install a pinned version: <code>bun add hono@4.6.3</code>.</div>
+
+<h2>A basic Hono app on Bun</h2>
+<pre><code>// server.ts
+import { Hono } from "hono";
+
+const app = new Hono();
+
+app.get("/", (c) =&gt; c.text("Hello from Hono on Bun"));
+app.get("/users/:id", (c) =&gt; c.json({ id: c.req.param("id") }));
+app.post("/echo", async (c) =&gt; c.json(await c.req.json()));
+
+// middleware
+app.use("*", async (c, next) =&gt; {
+  const t = Bun.nanoseconds();
+  await next();
+  c.header("X-Response-Time", `${(Bun.nanoseconds() - t) / 1e6}ms`);
+});
+
+export default app;      // Bun auto-serves a default export with a fetch handler</code></pre>
+<pre><code>bun --hot server.ts      # http://localhost:3000</code></pre>
+
+<h2>JWT with refresh tokens in HttpOnly cookies</h2>
+<p>The pattern: a <strong>short-lived access token</strong> (~15 min) the client sends on each request, and a <strong>long-lived refresh token</strong> (~7 days) stored in an <code>HttpOnly; Secure; SameSite</code> cookie that JavaScript can't read — mitigating XSS token theft. <code>/refresh</code> rotates the pair.</p>
+<pre><code>import { Hono } from "hono";
+import { sign, verify } from "hono/jwt";
+import { setCookie, getCookie, deleteCookie } from "hono/cookie";
+
+const app = new Hono();
+const ACCESS_SECRET = Bun.env.ACCESS_SECRET!;
+const REFRESH_SECRET = Bun.env.REFRESH_SECRET!;
+
+const now = () =&gt; Math.floor(Date.now() / 1000);
+const accessToken  = (sub: string) =&gt; sign({ sub, exp: now() + 60 * 15 }, ACCESS_SECRET);
+const refreshToken = (sub: string) =&gt; sign({ sub, exp: now() + 60 * 60 * 24 * 7 }, REFRESH_SECRET);
+
+function setRefreshCookie(c: any, token: string) {
+  setCookie(c, "refresh_token", token, {
+    httpOnly: true,
+    secure: true,             // HTTPS only
+    sameSite: "Strict",
+    path: "/refresh",         // cookie only sent to the refresh route
+    maxAge: 60 * 60 * 24 * 7,
+  });
+}
+
+// LOGIN — verify credentials, issue both tokens
+app.post("/login", async (c) =&gt; {
+  const { email, password } = await c.req.json();
+  const user = await findUser(email);
+  if (!user || !(await Bun.password.verify(password, user.passwordHash))) {
+    return c.json({ error: "invalid credentials" }, 401);
+  }
+  setRefreshCookie(c, await refreshToken(user.id));
+  return c.json({ accessToken: await accessToken(user.id) });
+});
+
+// REFRESH — rotate: verify the cookie, issue a fresh pair
+app.post("/refresh", async (c) =&gt; {
+  const token = getCookie(c, "refresh_token");
+  if (!token) return c.json({ error: "no refresh token" }, 401);
+  try {
+    const payload = await verify(token, REFRESH_SECRET);
+    setRefreshCookie(c, await refreshToken(payload.sub as string));   // rotate
+    return c.json({ accessToken: await accessToken(payload.sub as string) });
+  } catch {
+    return c.json({ error: "invalid refresh token" }, 401);
+  }
+});
+
+// LOGOUT — clear the cookie
+app.post("/logout", (c) =&gt; {
+  deleteCookie(c, "refresh_token", { path: "/refresh" });
+  return c.json({ ok: true });
+});
+
+// PROTECTED — validate the access token from the Authorization header
+app.get("/me", async (c) =&gt; {
+  const auth = c.req.header("Authorization") ?? "";
+  const token = auth.replace(/^Bearer /, "");
+  try {
+    const payload = await verify(token, ACCESS_SECRET);
+    return c.json({ userId: payload.sub });
+  } catch {
+    return c.json({ error: "unauthorized" }, 401);
+  }
+});</code></pre>
+<p>Store password hashes with <code>Bun.password</code> (see <a href="security-crypto.html">Security &amp; Crypto</a>), and add a <a href="security-crypto.html">CSRF token</a> to state-changing form posts if you also accept cookie-authenticated requests.</p>
+
+<h2>SSO (OAuth2 / OIDC)</h2>
+<p>Redirect the user to a provider (Google/GitHub), receive an authorization <code>code</code> on your callback, exchange it for the provider's token, fetch the profile, then issue <em>your own</em> session tokens (reusing the flow above).</p>
+<pre><code>const GITHUB_CLIENT_ID = Bun.env.GITHUB_CLIENT_ID!;
+const GITHUB_CLIENT_SECRET = Bun.env.GITHUB_CLIENT_SECRET!;
+const REDIRECT_URI = "http://localhost:3000/auth/callback";
+
+// 1) Send the user to the provider
+app.get("/auth/github", (c) =&gt; {
+  const state = crypto.randomUUID();
+  setCookie(c, "oauth_state", state, { httpOnly: true, sameSite: "Lax", path: "/auth" });
+  const url = new URL("https://github.com/login/oauth/authorize");
+  url.searchParams.set("client_id", GITHUB_CLIENT_ID);
+  url.searchParams.set("redirect_uri", REDIRECT_URI);
+  url.searchParams.set("scope", "read:user user:email");
+  url.searchParams.set("state", state);
+  return c.redirect(url.toString());
+});
+
+// 2) Handle the callback: verify state, exchange code, fetch profile
+app.get("/auth/callback", async (c) =&gt; {
+  if (c.req.query("state") !== getCookie(c, "oauth_state")) {
+    return c.json({ error: "state mismatch" }, 400);      // CSRF protection
+  }
+  const code = c.req.query("code")!;
+
+  const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
+    method: "POST",
+    headers: { Accept: "application/json", "Content-Type": "application/json" },
+    body: JSON.stringify({
+      client_id: GITHUB_CLIENT_ID, client_secret: GITHUB_CLIENT_SECRET,
+      code, redirect_uri: REDIRECT_URI,
+    }),
+  });
+  const { access_token } = await tokenRes.json();
+
+  const profile = await (await fetch("https://api.github.com/user", {
+    headers: { Authorization: `Bearer ${access_token}`, "User-Agent": "bun-app" },
+  })).json();
+
+  const user = await upsertUserFromProvider("github", profile);
+
+  // 3) Issue YOUR OWN session (same refresh-cookie + access-token flow)
+  setRefreshCookie(c, await refreshToken(user.id));
+  return c.redirect(`/#token=${await accessToken(user.id)}`);
+});</code></pre>
+<div class="note">OIDC (e.g. Google, Auth0) is the same shape, plus an <code>id_token</code> (a JWT) you verify against the provider's JWKS. Always validate <code>state</code> to block CSRF on the callback, and keep client secrets in <code>.env.local</code>.</div>
+
+<h2>Bun.s3 — object storage</h2>
+<p><code>Bun.s3</code> (equivalent to <code>new Bun.S3Client()</code> reading <code>S3_*</code>/<code>AWS_*</code> env vars) gives <code>Blob</code>-shaped access to any S3-compatible service (AWS, R2, Spaces, MinIO, Supabase).</p>
+<pre><code>import { s3, S3Client } from "bun";
+
+// Explicit client (multiple buckets / non-AWS endpoints)
+const client = new S3Client({
+  accessKeyId: Bun.env.S3_ACCESS_KEY_ID!,
+  secretAccessKey: Bun.env.S3_SECRET_ACCESS_KEY!,
+  bucket: "my-bucket",
+  // endpoint: "https://&lt;account&gt;.r2.cloudflarestorage.com",  // Cloudflare R2
+});
+
+// Read / write like a file
+const file = client.file("reports/q3.json");
+const data = await file.json();
+await file.write(JSON.stringify({ ok: true }), { type: "application/json" });
+await file.delete();</code></pre>
+
+<h3>Presigned upload — let users upload straight to S3</h3>
+<pre><code>// Server issues a short-lived PUT URL (synchronous, no network call)
+app.post("/upload-url", (c) =&gt; {
+  const key = `uploads/${crypto.randomUUID()}`;
+  const url = s3.presign(key, {
+    method: "PUT",
+    expiresIn: 3600,          // 1 hour
+    type: "image/png",
+  });
+  return c.json({ url, key });
+});</code></pre>
+<p>The client then <code>PUT</code>s the file to that URL directly — your server never proxies the bytes.</p>
+
+<h3>Redirect a download to a presigned URL</h3>
+<pre><code>app.get("/download/:key", (c) =&gt; {
+  // Passing an S3File as a Response body emits a 302 to a presigned URL
+  return new Response(s3.file(c.req.param("key")));
+});</code></pre>
+<div class="note">Large files: <code>s3.file(key).writer({ partSize, queueSize, retry })</code> streams multipart uploads automatically. The <code>s3://</code> protocol also works through plain <code>fetch()</code> and <code>Bun.file()</code> — see <a href="file-io.html">File I/O</a>.</div>

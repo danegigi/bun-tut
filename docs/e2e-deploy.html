@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E2E Testing & Deploying — Bun Tutorial</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --text:#e6edf3; --muted:#8b949e;
+  --accent:#fbf0df; --accent-2:#f472b6; --code-bg:#0b0f14; --border:#30363d;
+  --link:#f9a8d4;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+header.nav{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:10px 20px}
+header.nav .brand{font-weight:700;color:var(--accent);font-size:15px}
+header.nav a.home{margin-left:auto;font-size:14px;color:var(--muted)}
+.wrap{max-width:940px;margin:0 auto;padding:28px 20px 120px}
+h1.page-title{font-size:2rem;margin:.2em 0 .3em;color:var(--accent);line-height:1.2}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-top:.6em;border-top:1px solid var(--border);scroll-margin-top:70px}
+h3{font-size:1.12rem;margin:1.6em 0 .4em;color:var(--accent);scroll-margin-top:70px}
+p,li{color:var(--text)}
+.verify{display:block;border-left:3px solid #d29922;background:#231f16;padding:10px 14px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14px;color:#e3b341}
+.note{border-left:3px solid var(--accent-2);background:var(--panel);padding:12px 16px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14.5px}
+.ref{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:.2em 0 1.4em;font-size:14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:9px 13px}
+nav.toc{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin:1.6em 0}
+nav.toc strong{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+nav.toc ul{margin:0;padding:0;list-style:none;column-gap:28px;columns:2}
+nav.toc li{margin:5px 0;break-inside:avoid}
+nav.toc li.lvl3{padding-left:14px;font-size:14px}
+pre{position:relative;background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:16px 18px;overflow:auto;font-size:13.5px;line-height:1.55}
+code{font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+:not(pre)>code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:.9em;color:#ffd9ec}
+table{border-collapse:collapse;width:100%;margin:1.2em 0;font-size:14px;display:block;overflow:auto}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--panel);color:var(--accent)}
+pre .copy{position:absolute;top:8px;right:8px;opacity:0;transition:.15s;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+pre:hover .copy{opacity:1}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:3em;border-top:1px solid var(--border);padding-top:1.4em}
+.pager a{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 16px;flex:1;color:var(--text)}
+.pager a.next{text-align:right}
+.pager a small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.fab{position:fixed;right:20px;z-index:30;border:none;border-radius:24px;padding:10px 16px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);font-size:14px}
+.fab.try{bottom:20px;background:var(--accent);color:#0d1117}
+.fab.top{bottom:70px;background:var(--panel);color:var(--text);border:1px solid var(--border)}
+/* landing */
+.hero{text-align:center;padding:40px 0 10px}
+.hero .logo{font-size:3rem}
+.hero h1{font-size:2.4rem;margin:.1em 0;color:var(--accent)}
+.hero p{color:var(--muted);max-width:640px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin:32px 0}
+.card{display:block;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;transition:.15s}
+.card:hover{border-color:var(--accent-2);transform:translateY(-2px);text-decoration:none}
+.card .n{color:var(--muted);font-size:12px}
+.card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
+.card p{color:var(--muted);font-size:14px;margin:0}
+@media(max-width:640px){nav.toc ul{columns:1}}
+</style>
+</head>
+<body>
+<header class="nav"><span class="brand">🥟 Bun Tutorial</span><a class="home" href="index.html">← All sections</a></header>
+<main class="wrap">
+<h1 class="page-title">🚢 E2E Testing & Deploying</h1>
+<div class="ref">📖 Official reference: <a href="https://bun.com/docs/bundler/executables" target="_blank" rel="noopener">bun.com/docs/bundler/executables</a></div>
+<nav class="toc"><strong>On this page</strong><ul>
+<li class="lvl2"><a href="#playwright-e2e-under-bun">Playwright E2E under Bun</a></li>
+<li class="lvl2"><a href="#bun-build-bundling">bun build — bundling</a></li>
+<li class="lvl2"><a href="#standalone-executables-bun-build---compile">Standalone executables — bun build --compile</a></li>
+<li class="lvl3"><a href="#cross-compilation">Cross-compilation</a></li>
+<li class="lvl3"><a href="#embedding-assets">Embedding assets</a></li>
+<li class="lvl2"><a href="#dockerizing-a-bun-app">Dockerizing a Bun app</a></li>
+<li class="lvl2"><a href="#production-install">Production install</a></li>
+<li class="lvl2"><a href="#where-to-go-next">Where to go next</a></li>
+</ul></nav>
+<p>The final step: end-to-end tests with Playwright, then shipping — bundling, compiling a standalone executable, Dockerizing, and production install flags.</p>
+
+<h2 id="playwright-e2e-under-bun">Playwright E2E under Bun</h2>
+<p>Playwright is a third-party tool (pin it: <code>bun add -d @playwright/test@1.48.0</code> then <code>bunx playwright install chromium</code>). It drives a real browser against your running app.</p>
+<pre><code>// e2e/login.spec.ts
+import { test, expect } from "@playwright/test";
+
+test("user can log in", async ({ page }) =&gt; {
+  await page.goto("http://localhost:3000/login");
+  await page.fill('input[name="email"]', "alice@example.com");
+  await page.fill('input[name="password"]', "secret");
+  await page.click('button[type="submit"]');
+  await expect(page.locator("h1")).toHaveText("Welcome, Alice");
+});</code></pre>
+<pre><code>// playwright.config.ts — start the Bun server automatically
+import { defineConfig } from "@playwright/test";
+
+export default defineConfig({
+  testDir: "./e2e",
+  webServer: {
+    command: "bun run server.ts",
+    url: "http://localhost:3000",
+    reuseExistingServer: !process.env.CI,
+  },
+});</code></pre>
+<pre><code>bunx playwright test              # run E2E suite
+bunx playwright test --ui         # interactive UI mode</code></pre>
+<div class="note">Playwright runs its own test runner (not <code>bun test</code>). Keep unit/integration tests on <code>bun test</code> and reserve Playwright for browser-level E2E. For headless scraping <em>inside</em> your app, prefer the built-in <a href="data-content.html">Bun.WebView</a> — no install.</div>
+
+<h2 id="bun-build-bundling">bun build — bundling</h2>
+<pre><code>bun build ./src/index.ts --outdir ./dist                # bundle
+bun build ./src/index.ts --outdir ./dist --minify        # minified
+bun build ./src/index.ts --outdir ./dist --target bun    # for the Bun runtime
+bun build ./src/index.ts --outdir ./dist --target browser --splitting  # web</code></pre>
+<pre><code>// or programmatically
+await Bun.build({
+  entrypoints: ["./src/index.ts"],
+  outdir: "./dist",
+  minify: true,
+  target: "bun",
+});</code></pre>
+
+<h2 id="standalone-executables-bun-build---compile">Standalone executables — bun build --compile</h2>
+<p><code>--compile</code> bundles your app <em>and</em> the Bun runtime into a single self-contained binary — no Bun install needed on the target machine.</p>
+<pre><code># current platform
+bun build ./src/cli.ts --compile --outfile myapp
+./myapp
+
+# smaller, production binary
+bun build ./src/cli.ts --compile --minify --sourcemap --outfile myapp</code></pre>
+<h3 id="cross-compilation">Cross-compilation</h3>
+<pre><code>bun build ./src/cli.ts --compile --target=bun-linux-x64   --outfile myapp-linux
+bun build ./src/cli.ts --compile --target=bun-linux-arm64 --outfile myapp-arm
+bun build ./src/cli.ts --compile --target=bun-darwin-arm64 --outfile myapp-mac
+bun build ./src/cli.ts --compile --target=bun-windows-x64 --outfile myapp.exe</code></pre>
+<h3 id="embedding-assets">Embedding assets</h3>
+<p>Files you <code>import</code> (or reference via <code>Bun.file</code> with a static path) get embedded into the binary:</p>
+<pre><code>import icon from "./icon.png" with { type: "file" };
+// icon is a path that resolves inside the compiled binary at runtime
+console.log(await Bun.file(icon).bytes());</code></pre>
+
+<h2 id="dockerizing-a-bun-app">Dockerizing a Bun app</h2>
+<pre><code># Dockerfile
+FROM oven/bun:1.4.2 AS base
+WORKDIR /app
+
+# install deps first for layer caching
+FROM base AS deps
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile --production
+
+# runtime image
+FROM base AS release
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NODE_ENV=production
+EXPOSE 3000
+USER bun
+CMD ["bun", "run", "src/index.ts"]</code></pre>
+<pre><code>docker build -t my-bun-app .
+docker run -p 3000:3000 --env-file .env.production my-bun-app</code></pre>
+
+<h2 id="production-install">Production install</h2>
+<pre><code>bun install --frozen-lockfile --production   # skip devDependencies, fail on lockfile drift
+NODE_ENV=production bun run src/index.ts      # run in prod mode</code></pre>
+<div class="note">A compiled <code>--compile</code> binary is often the simplest deploy for CLIs and single-service apps: copy one file, run it, no runtime to install. Use the Docker image when you need the full <code>node_modules</code> tree or orchestration.</div>
+
+<h2 id="where-to-go-next">Where to go next</h2>
+<p>You've now toured Bun's built-in standard library end to end. Every section links to its official reference at the top — bookmark <a href="https://bun.com/docs" target="_blank" rel="noopener">bun.com/docs</a> and <a href="https://bun.com/reference/bun" target="_blank" rel="noopener">bun.com/reference/bun</a> for the full API surface.</p>
+
+<div class="pager">
+<a class="prev" href="web-hono-auth.html"><small>Previous</small>🔑 Web Dev: Hono + Auth + Storage</a>
+<a class="next" href="index.html"><small>Done</small>Back to index</a>
+</div>
+</main>
+<button class="fab try" onclick="window.open('https://bun.com/repl','_blank')">▶ Try in Bun</button>
+<button class="fab top" onclick="scrollTo({top:0,behavior:'smooth'})">↑ Top</button>
+<script>
+document.querySelectorAll('pre').forEach(function(pre){
+  var b=document.createElement('button');b.className='copy';b.textContent='Copy';
+  b.addEventListener('click',function(){
+    var t=pre.querySelector('code')?pre.querySelector('code').innerText:pre.innerText;
+    navigator.clipboard.writeText(t.replace(/Copy$/,''));
+    b.textContent='Copied!';setTimeout(function(){b.textContent='Copy'},1500);
+  });
+  pre.appendChild(b);
+});
+</script>
+</body>
+</html>

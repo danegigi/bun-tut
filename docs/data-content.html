@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data, Content & Automation — Bun Tutorial</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --text:#e6edf3; --muted:#8b949e;
+  --accent:#fbf0df; --accent-2:#f472b6; --code-bg:#0b0f14; --border:#30363d;
+  --link:#f9a8d4;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+header.nav{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:10px 20px}
+header.nav .brand{font-weight:700;color:var(--accent);font-size:15px}
+header.nav a.home{margin-left:auto;font-size:14px;color:var(--muted)}
+.wrap{max-width:940px;margin:0 auto;padding:28px 20px 120px}
+h1.page-title{font-size:2rem;margin:.2em 0 .3em;color:var(--accent);line-height:1.2}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-top:.6em;border-top:1px solid var(--border);scroll-margin-top:70px}
+h3{font-size:1.12rem;margin:1.6em 0 .4em;color:var(--accent);scroll-margin-top:70px}
+p,li{color:var(--text)}
+.verify{display:block;border-left:3px solid #d29922;background:#231f16;padding:10px 14px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14px;color:#e3b341}
+.note{border-left:3px solid var(--accent-2);background:var(--panel);padding:12px 16px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14.5px}
+.ref{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:.2em 0 1.4em;font-size:14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:9px 13px}
+nav.toc{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin:1.6em 0}
+nav.toc strong{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+nav.toc ul{margin:0;padding:0;list-style:none;column-gap:28px;columns:2}
+nav.toc li{margin:5px 0;break-inside:avoid}
+nav.toc li.lvl3{padding-left:14px;font-size:14px}
+pre{position:relative;background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:16px 18px;overflow:auto;font-size:13.5px;line-height:1.55}
+code{font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+:not(pre)>code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:.9em;color:#ffd9ec}
+table{border-collapse:collapse;width:100%;margin:1.2em 0;font-size:14px;display:block;overflow:auto}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--panel);color:var(--accent)}
+pre .copy{position:absolute;top:8px;right:8px;opacity:0;transition:.15s;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+pre:hover .copy{opacity:1}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:3em;border-top:1px solid var(--border);padding-top:1.4em}
+.pager a{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 16px;flex:1;color:var(--text)}
+.pager a.next{text-align:right}
+.pager a small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.fab{position:fixed;right:20px;z-index:30;border:none;border-radius:24px;padding:10px 16px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);font-size:14px}
+.fab.try{bottom:20px;background:var(--accent);color:#0d1117}
+.fab.top{bottom:70px;background:var(--panel);color:var(--text);border:1px solid var(--border)}
+/* landing */
+.hero{text-align:center;padding:40px 0 10px}
+.hero .logo{font-size:3rem}
+.hero h1{font-size:2.4rem;margin:.1em 0;color:var(--accent)}
+.hero p{color:var(--muted);max-width:640px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin:32px 0}
+.card{display:block;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;transition:.15s}
+.card:hover{border-color:var(--accent-2);transform:translateY(-2px);text-decoration:none}
+.card .n{color:var(--muted);font-size:12px}
+.card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
+.card p{color:var(--muted);font-size:14px;margin:0}
+@media(max-width:640px){nav.toc ul{columns:1}}
+</style>
+</head>
+<body>
+<header class="nav"><span class="brand">🥟 Bun Tutorial</span><a class="home" href="index.html">← All sections</a></header>
+<main class="wrap">
+<h1 class="page-title">🧩 Data, Content & Automation</h1>
+<div class="ref">📖 Official reference: <a href="https://bun.com/reference/bun" target="_blank" rel="noopener">bun.com/reference/bun</a></div>
+<nav class="toc"><strong>On this page</strong><ul>
+<li class="lvl2"><a href="#json-yaml-toml-json5">JSON, YAML, TOML, JSON5</a></li>
+<li class="lvl2"><a href="#bunmarkdown-render-markdown">Bun.markdown — render markdown</a></li>
+<li class="lvl2"><a href="#bunimage-image-pipeline">Bun.Image — image pipeline</a></li>
+<li class="lvl2"><a href="#bunarchive-tar-zip">Bun.Archive — tar / zip</a></li>
+<li class="lvl2"><a href="#bunglob-pattern-matching">Bun.Glob — pattern matching</a></li>
+<li class="lvl2"><a href="#buncolor-buninspect">Bun.color &amp; Bun.inspect</a></li>
+<li class="lvl2"><a href="#bunwebview-headless-browser-scraping">Bun.WebView — headless browser &amp; scraping</a></li>
+</ul></nav>
+<p>Bun treats structured data and content as first-class: config formats parse natively, images transform through a fast pipeline, archives pack and unpack, and <code>Bun.WebView</code> drives a headless browser for scraping — all built in.</p>
+
+<h2 id="json-yaml-toml-json5">JSON, YAML, TOML, JSON5</h2>
+<p>All four are first-class alongside <code>JSON</code>. You can <code>import</code> config files directly, and parse strings at runtime.</p>
+<pre><code>import { YAML, TOML, JSON5 } from "bun";
+
+// Parse strings
+const y = YAML.parse("name: Bun\nport: 3000");        // { name, port }
+const t = TOML.parse(`title = "app"\n[db]\nport = 5432`);
+const j = JSON5.parse(`{ unquoted: 1, trailing: 2, }`); // relaxed JSON
+
+// Serialize
+TOML.stringify({ title: "app", db: { port: 5432 } });
+JSON5.stringify({ a: 1 });
+
+// Multi-document YAML returns an array
+YAML.parse("---\na: 1\n---\nb: 2");                    // [{a:1},{b:2}]</code></pre>
+<p>Import config files as modules (parsed at build/run time, hot-reloadable under <code>--hot</code>):</p>
+<pre><code>import config from "./config.yaml";        // default = whole doc
+import { database, redis } from "./config.yaml";  // top-level keys = named exports</code></pre>
+
+<h2 id="bunmarkdown-render-markdown">Bun.markdown — render markdown</h2>
+<p>Parse and render markdown to HTML, ANSI (for terminals), or React elements. GFM tables, strikethrough, and task lists are on by default.</p>
+<pre><code>// to HTML
+const html = Bun.markdown.html("# Hello **world**\n\n- [x] done\n- [ ] todo");
+
+// to ANSI for the terminal
+const ansi = Bun.markdown.render("# Title\n\nSome **bold** text");
+console.log(ansi);
+
+// options: enable extras
+Bun.markdown.html(src, { latexMath: true, wikiLinks: true, headings: { ids: true } });</code></pre>
+
+<h2 id="bunimage-image-pipeline">Bun.Image — image pipeline</h2>
+<p>A chainable, Sharp-style pipeline (decode → transform → encode). Nothing runs until you <code>await</code> a terminal, and the work happens off the JS thread.</p>
+<pre><code>// Resize a photo and re-encode as WebP
+await Bun.file("photo.jpg")
+  .image()
+  .resize(400, 400, { fit: "inside" })
+  .webp({ quality: 80 })
+  .write("thumb.webp");
+
+// Read metadata without decoding pixels
+const { width, height, format } = await new Bun.Image("photo.jpg").metadata();
+
+// Transform chain
+const bytes = await new Bun.Image(buffer)
+  .rotate(90)
+  .modulate({ brightness: 1.1, saturation: 0 })   // 0 saturation = greyscale
+  .png()
+  .bytes();
+
+// Low-quality placeholder (tiny data: URL for blur-up loading)
+const lqip = await Bun.file("hero.jpg").image().placeholder();</code></pre>
+<p>It composes with <code>Bun.serve</code> — a pipeline is a valid <code>Response</code> body:</p>
+<pre><code>Bun.serve({
+  routes: {
+    "/avatar/:id": async (req) =&gt; {
+      if (!/^[a-z0-9]+$/.test(req.params.id)) return new Response(null, { status: 400 });
+      const out = await Bun.file(`avatars/${req.params.id}.png`)
+        .image().resize(128, 128).webp().blob();
+      return new Response(out);
+    },
+  },
+});</code></pre>
+<div class="note">Validate any user-supplied path before passing it to <code>Bun.Image(pathString)</code> — a raw string is a file path (arbitrary-read primitive). For untrusted input, read into a <code>Buffer</code> first. HEIC/AVIF encode depend on OS codecs (macOS/Windows); on failure the terminal rejects with <code>ERR_IMAGE_FORMAT_UNSUPPORTED</code> — catch it and fall back to WebP.</div>
+
+<h2 id="bunarchive-tar-zip">Bun.Archive — tar / zip</h2>
+<p>Create and extract archives. Optional gzip compression.</p>
+<pre><code>// Create from an object of { path: contents }
+const archive = new Bun.Archive(
+  { "readme.md": "# Hello", "src/index.ts": "console.log(1)" },
+  { compress: "gzip", level: 6 },
+);
+await Bun.Archive.write("bundle.tar.gz", archive);   // write to disk
+const blob = await archive.blob();                    // or get a Blob
+
+// Extract (returns number of entries written)
+const src = new Bun.Archive(await Bun.file("bundle.tar.gz").bytes());
+await src.extract("./out");
+
+// Extract with a glob filter (same syntax as Bun.Glob)
+await src.extract("./out", { glob: ["src/**", "!**/*.test.ts"] });</code></pre>
+
+<h2 id="bunglob-pattern-matching">Bun.Glob — pattern matching</h2>
+<pre><code>const glob = new Bun.Glob("**/*.ts");
+
+// Scan the filesystem (async iterator)
+for await (const path of glob.scan(".")) console.log(path);
+
+// All matches at once
+const files = await Array.fromAsync(glob.scan({ cwd: "./src" }));
+
+// Sync
+const sync = [...glob.scanSync("./src")];
+
+// Match a string without touching disk
+new Bun.Glob("*.{js,ts}").match("index.ts");   // true</code></pre>
+
+<h2 id="buncolor-buninspect">Bun.color &amp; Bun.inspect</h2>
+<pre><code>// Convert colors between formats
+Bun.color("#f472b6", "ansi");        // ANSI escape for terminals
+Bun.color("red", "{rgb}");           // { r: 255, g: 0, b: 0 }
+Bun.color("rgb(34,197,94)", "hex");  // "#22c55e"
+Bun.color("#000", "number");         // 0
+
+// Inspect any value like console.log formats it, but as a string
+Bun.inspect({ a: 1, b: [2, 3] });    // "{\n  a: 1,\n  b: [ 2, 3 ],\n}"</code></pre>
+
+<h2 id="bunwebview-headless-browser-scraping">Bun.WebView — headless browser &amp; scraping</h2>
+<p><code>Bun.WebView</code> is a headless browser built into the runtime — navigate pages, run JS inside them, click, and screenshot, with no Puppeteer/Playwright install (WKWebView on macOS, Chrome DevTools Protocol elsewhere).</p>
+<pre><code>await using view = new Bun.WebView();
+
+await view.navigate("https://example.com");
+const title = await view.evaluate("document.title");
+await Bun.write("page.png", await view.screenshot());   // Blob by default</code></pre>
+<p><strong>Scraping example</strong> — pull structured data out of a page:</p>
+<pre><code>await using view = new Bun.WebView({ width: 1280, height: 800 });
+
+await view.navigate("https://news.ycombinator.com");
+
+// Extract as a real JS value (round-trips via JSON)
+const stories = await view.evaluate(`
+  [...document.querySelectorAll('.titleline > a')]
+    .slice(0, 10)
+    .map(a => ({ title: a.textContent, url: a.href }))
+`);
+
+console.log(stories);   // [{ title, url }, ...]
+
+// Interact: wait for an element to be actionable, then click
+await view.click("a.morelink");
+await view.screenshot({ format: "jpeg", quality: 80, encoding: "buffer" });</code></pre>
+<p>Input methods dispatch <em>native</em> events (<code>isTrusted: true</code>), <code>click(selector)</code> waits for the element to become actionable, and <code>using</code>/<code>await using</code> auto-closes the view. For persistence across runs, pass <code>dataStore: { directory: "./profile" }</code>.</p>
+<div class="verify">⚠️ <code>Bun.WebView</code> is marked experimental in the reference and its API may change. On Linux/Windows it drives an installed Chrome/Chromium/Edge/Brave over CDP; on macOS it uses the system WebKit with nothing to install.</div>
+
+<div class="pager">
+<a class="prev" href="security-crypto.html"><small>Previous</small>🔐 Security & Crypto</a>
+<a class="next" href="utilities.html"><small>Next</small>🛠️ Utilities</a>
+</div>
+</main>
+<button class="fab try" onclick="window.open('https://bun.com/repl','_blank')">▶ Try in Bun</button>
+<button class="fab top" onclick="scrollTo({top:0,behavior:'smooth'})">↑ Top</button>
+<script>
+document.querySelectorAll('pre').forEach(function(pre){
+  var b=document.createElement('button');b.className='copy';b.textContent='Copy';
+  b.addEventListener('click',function(){
+    var t=pre.querySelector('code')?pre.querySelector('code').innerText:pre.innerText;
+    navigator.clipboard.writeText(t.replace(/Copy$/,''));
+    b.textContent='Copied!';setTimeout(function(){b.textContent='Copy'},1500);
+  });
+  pre.appendChild(b);
+});
+</script>
+</body>
+</html>

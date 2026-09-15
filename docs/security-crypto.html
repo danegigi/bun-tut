@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security & Crypto — Bun Tutorial</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --text:#e6edf3; --muted:#8b949e;
+  --accent:#fbf0df; --accent-2:#f472b6; --code-bg:#0b0f14; --border:#30363d;
+  --link:#f9a8d4;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+header.nav{position:sticky;top:0;z-index:20;background:rgba(13,17,23,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;padding:10px 20px}
+header.nav .brand{font-weight:700;color:var(--accent);font-size:15px}
+header.nav a.home{margin-left:auto;font-size:14px;color:var(--muted)}
+.wrap{max-width:940px;margin:0 auto;padding:28px 20px 120px}
+h1.page-title{font-size:2rem;margin:.2em 0 .3em;color:var(--accent);line-height:1.2}
+h2{font-size:1.4rem;margin:2.2em 0 .5em;padding-top:.6em;border-top:1px solid var(--border);scroll-margin-top:70px}
+h3{font-size:1.12rem;margin:1.6em 0 .4em;color:var(--accent);scroll-margin-top:70px}
+p,li{color:var(--text)}
+.verify{display:block;border-left:3px solid #d29922;background:#231f16;padding:10px 14px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14px;color:#e3b341}
+.note{border-left:3px solid var(--accent-2);background:var(--panel);padding:12px 16px;border-radius:0 8px 8px 0;margin:1.2em 0;font-size:14.5px}
+.ref{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:.2em 0 1.4em;font-size:14px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:9px 13px}
+nav.toc{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 20px;margin:1.6em 0}
+nav.toc strong{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+nav.toc ul{margin:0;padding:0;list-style:none;column-gap:28px;columns:2}
+nav.toc li{margin:5px 0;break-inside:avoid}
+nav.toc li.lvl3{padding-left:14px;font-size:14px}
+pre{position:relative;background:var(--code-bg);border:1px solid var(--border);border-radius:10px;padding:16px 18px;overflow:auto;font-size:13.5px;line-height:1.55}
+code{font-family:"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+:not(pre)>code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:.9em;color:#ffd9ec}
+table{border-collapse:collapse;width:100%;margin:1.2em 0;font-size:14px;display:block;overflow:auto}
+th,td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+th{background:var(--panel);color:var(--accent)}
+pre .copy{position:absolute;top:8px;right:8px;opacity:0;transition:.15s;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer}
+pre:hover .copy{opacity:1}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:3em;border-top:1px solid var(--border);padding-top:1.4em}
+.pager a{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 16px;flex:1;color:var(--text)}
+.pager a.next{text-align:right}
+.pager a small{display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
+.fab{position:fixed;right:20px;z-index:30;border:none;border-radius:24px;padding:10px 16px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.4);font-size:14px}
+.fab.try{bottom:20px;background:var(--accent);color:#0d1117}
+.fab.top{bottom:70px;background:var(--panel);color:var(--text);border:1px solid var(--border)}
+/* landing */
+.hero{text-align:center;padding:40px 0 10px}
+.hero .logo{font-size:3rem}
+.hero h1{font-size:2.4rem;margin:.1em 0;color:var(--accent)}
+.hero p{color:var(--muted);max-width:640px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin:32px 0}
+.card{display:block;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;transition:.15s}
+.card:hover{border-color:var(--accent-2);transform:translateY(-2px);text-decoration:none}
+.card .n{color:var(--muted);font-size:12px}
+.card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
+.card p{color:var(--muted);font-size:14px;margin:0}
+@media(max-width:640px){nav.toc ul{columns:1}}
+</style>
+</head>
+<body>
+<header class="nav"><span class="brand">🥟 Bun Tutorial</span><a class="home" href="index.html">← All sections</a></header>
+<main class="wrap">
+<h1 class="page-title">🔐 Security & Crypto</h1>
+<div class="ref">📖 Official reference: <a href="https://bun.com/docs/api/hashing" target="_blank" rel="noopener">bun.com/docs/api/hashing</a></div>
+<nav class="toc"><strong>On this page</strong><ul>
+<li class="lvl2"><a href="#bunpassword-hashing-passwords">Bun.password — hashing passwords</a></li>
+<li class="lvl2"><a href="#bunhash-fast-non-cryptographic-hashing">Bun.hash — fast non-cryptographic hashing</a></li>
+<li class="lvl2"><a href="#buncryptohasher-cryptographic-hashing-hmac">Bun.CryptoHasher — cryptographic hashing &amp; HMAC</a></li>
+<li class="lvl2"><a href="#buncsrf-csrf-tokens">Bun.CSRF — CSRF tokens</a></li>
+<li class="lvl2"><a href="#bunsecrets-os-credential-storage">Bun.secrets — OS credential storage</a></li>
+</ul></nav>
+<p>Bun's security toolkit covers password hashing, fast non-cryptographic hashing, incremental cryptographic hashing/HMAC, CSRF tokens, and OS-native secret storage — all first-party, no npm packages.</p>
+
+<h2 id="bunpassword-hashing-passwords">Bun.password — hashing passwords</h2>
+<p>Argon2id by default (or bcrypt). The algorithm and salt are embedded in the hash, so <code>verify</code> figures everything out.</p>
+<pre><code>const hash = await Bun.password.hash("super-secure-pa$$word");
+// $argon2id$v=19$m=65536,t=2,p=1$...salt...$...hash...
+
+const ok = await Bun.password.verify("super-secure-pa$$word", hash);  // true
+
+// choose the algorithm / cost
+const argon = await Bun.password.hash(pw, {
+  algorithm: "argon2id", memoryCost: 65536, timeCost: 2,
+});
+const bcrypt = await Bun.password.hash(pw, { algorithm: "bcrypt", cost: 12 });
+
+// sync variants exist but block — avoid in request handlers
+Bun.password.hashSync(pw);</code></pre>
+<div class="note">Never store or log the plaintext. <code>Bun.password.hash</code> generates a random salt automatically; with bcrypt, passwords over 72 bytes are pre-hashed with SHA-512 instead of being silently truncated.</div>
+
+<h2 id="bunhash-fast-non-cryptographic-hashing">Bun.hash — fast non-cryptographic hashing</h2>
+<p>For hash tables, checksums, sharding — <strong>not</strong> for security. Wyhash by default.</p>
+<pre><code>Bun.hash("some data");            // 64-bit bigint
+Bun.hash("some data", 1234);      // with a seed
+
+Bun.hash.crc32("data");
+Bun.hash.xxHash64("data");
+Bun.hash.cityHash64("data");
+Bun.hash.murmur32v3("data");</code></pre>
+
+<h2 id="buncryptohasher-cryptographic-hashing-hmac">Bun.CryptoHasher — cryptographic hashing &amp; HMAC</h2>
+<pre><code>const hasher = new Bun.CryptoHasher("sha256");
+hasher.update("hello ");
+hasher.update("world");
+hasher.digest("hex");             // "b94d27b9934d3e08..."
+// digest() also accepts "base64" / "base64url", or a TypedArray to fill
+
+// HMAC — pass a key to the constructor
+const mac = new Bun.CryptoHasher("sha256", "secret-key");
+mac.update("hello world");
+mac.digest("hex");</code></pre>
+<p>Supported algorithms include <code>sha1</code>, <code>sha256</code>, <code>sha384</code>, <code>sha512</code>, the <code>sha3-*</code> family, <code>blake2b*</code>, <code>md5</code>, <code>shake128/256</code>, and more.</p>
+<div class="note">The HMAC hasher does <em>not</em> reset after <code>digest()</code> — create a new instance per message, or <code>copy()</code> before digesting.</div>
+
+<h2 id="buncsrf-csrf-tokens">Bun.CSRF — CSRF tokens</h2>
+<p>Signed, HMAC-based tokens with an issue timestamp and expiry. <strong>Always pass a <code>sessionId</code></strong> to bind a token to one user.</p>
+<pre><code>const token = Bun.CSRF.generate("my-secret", {
+  sessionId: "user-session-id",
+  expiresIn: 60 * 60 * 1000,       // 1 hour (ms)
+});
+
+const valid = Bun.CSRF.verify(token, {
+  secret: "my-secret",
+  sessionId: "user-session-id",
+});                                 // boolean</code></pre>
+<p>A typical form flow with <code>Bun.serve</code>: issue a per-session token when rendering the form, embed it in a hidden field, verify it on POST.</p>
+<pre><code>const SECRET = Bun.env.CSRF_SECRET!;
+
+Bun.serve({
+  routes: {
+    "/form": (req) =&gt; {
+      const sessionId = getSession(req);            // from your session cookie
+      const token = Bun.CSRF.generate(SECRET, { sessionId });
+      return new Response(
+        `&lt;form method="POST" action="/submit"&gt;
+           &lt;input type="hidden" name="_csrf" value="${token}"&gt;
+           &lt;button&gt;Send&lt;/button&gt;
+         &lt;/form&gt;`,
+        { headers: { "Content-Type": "text/html" } },
+      );
+    },
+    "/submit": {
+      POST: async (req) =&gt; {
+        const sessionId = getSession(req);
+        const form = await req.formData();
+        const token = form.get("_csrf");
+        if (typeof token !== "string" ||
+            !Bun.CSRF.verify(token, { secret: SECRET, sessionId })) {
+          return new Response("Invalid CSRF token", { status: 403 });
+        }
+        return new Response("OK");
+      },
+    },
+  },
+});</code></pre>
+
+<h2 id="bunsecrets-os-credential-storage">Bun.secrets — OS credential storage</h2>
+<p>Store credentials in the OS keychain (macOS Keychain / Linux libsecret / Windows Credential Manager) instead of plaintext dotfiles. Ideal for CLI tools and local dev.</p>
+<pre><code>import { secrets } from "bun";
+
+let token = await secrets.get({ service: "my-cli", name: "github-token" });
+
+if (!token) {
+  token = prompt("GitHub token?")!;
+  await secrets.set({ service: "my-cli", name: "github-token", value: token });
+}
+
+await secrets.delete({ service: "my-cli", name: "github-token" });</code></pre>
+<div class="verify">⚠️ <code>Bun.secrets</code> is marked experimental in the reference and may change. It's meant for local development tools — use real secret management (or env vars) for production servers.</div>
+
+<div class="pager">
+<a class="prev" href="test-runner.html"><small>Previous</small>✅ Test Runner</a>
+<a class="next" href="data-content.html"><small>Next</small>🧩 Data, Content & Automation</a>
+</div>
+</main>
+<button class="fab try" onclick="window.open('https://bun.com/repl','_blank')">▶ Try in Bun</button>
+<button class="fab top" onclick="scrollTo({top:0,behavior:'smooth'})">↑ Top</button>
+<script>
+document.querySelectorAll('pre').forEach(function(pre){
+  var b=document.createElement('button');b.className='copy';b.textContent='Copy';
+  b.addEventListener('click',function(){
+    var t=pre.querySelector('code')?pre.querySelector('code').innerText:pre.innerText;
+    navigator.clipboard.writeText(t.replace(/Copy$/,''));
+    b.textContent='Copied!';setTimeout(function(){b.textContent='Copy'},1500);
+  });
+  pre.appendChild(b);
+});
+</script>
+</body>
+</html>

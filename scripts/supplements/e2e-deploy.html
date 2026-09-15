@@ -1,0 +1,89 @@
+<p>The final step: end-to-end tests with Playwright, then shipping — bundling, compiling a standalone executable, Dockerizing, and production install flags.</p>
+
+<h2>Playwright E2E under Bun</h2>
+<p>Playwright is a third-party tool (pin it: <code>bun add -d @playwright/test@1.48.0</code> then <code>bunx playwright install chromium</code>). It drives a real browser against your running app.</p>
+<pre><code>// e2e/login.spec.ts
+import { test, expect } from "@playwright/test";
+
+test("user can log in", async ({ page }) =&gt; {
+  await page.goto("http://localhost:3000/login");
+  await page.fill('input[name="email"]', "alice@example.com");
+  await page.fill('input[name="password"]', "secret");
+  await page.click('button[type="submit"]');
+  await expect(page.locator("h1")).toHaveText("Welcome, Alice");
+});</code></pre>
+<pre><code>// playwright.config.ts — start the Bun server automatically
+import { defineConfig } from "@playwright/test";
+
+export default defineConfig({
+  testDir: "./e2e",
+  webServer: {
+    command: "bun run server.ts",
+    url: "http://localhost:3000",
+    reuseExistingServer: !process.env.CI,
+  },
+});</code></pre>
+<pre><code>bunx playwright test              # run E2E suite
+bunx playwright test --ui         # interactive UI mode</code></pre>
+<div class="note">Playwright runs its own test runner (not <code>bun test</code>). Keep unit/integration tests on <code>bun test</code> and reserve Playwright for browser-level E2E. For headless scraping <em>inside</em> your app, prefer the built-in <a href="data-content.html">Bun.WebView</a> — no install.</div>
+
+<h2>bun build — bundling</h2>
+<pre><code>bun build ./src/index.ts --outdir ./dist                # bundle
+bun build ./src/index.ts --outdir ./dist --minify        # minified
+bun build ./src/index.ts --outdir ./dist --target bun    # for the Bun runtime
+bun build ./src/index.ts --outdir ./dist --target browser --splitting  # web</code></pre>
+<pre><code>// or programmatically
+await Bun.build({
+  entrypoints: ["./src/index.ts"],
+  outdir: "./dist",
+  minify: true,
+  target: "bun",
+});</code></pre>
+
+<h2>Standalone executables — bun build --compile</h2>
+<p><code>--compile</code> bundles your app <em>and</em> the Bun runtime into a single self-contained binary — no Bun install needed on the target machine.</p>
+<pre><code># current platform
+bun build ./src/cli.ts --compile --outfile myapp
+./myapp
+
+# smaller, production binary
+bun build ./src/cli.ts --compile --minify --sourcemap --outfile myapp</code></pre>
+<h3>Cross-compilation</h3>
+<pre><code>bun build ./src/cli.ts --compile --target=bun-linux-x64   --outfile myapp-linux
+bun build ./src/cli.ts --compile --target=bun-linux-arm64 --outfile myapp-arm
+bun build ./src/cli.ts --compile --target=bun-darwin-arm64 --outfile myapp-mac
+bun build ./src/cli.ts --compile --target=bun-windows-x64 --outfile myapp.exe</code></pre>
+<h3>Embedding assets</h3>
+<p>Files you <code>import</code> (or reference via <code>Bun.file</code> with a static path) get embedded into the binary:</p>
+<pre><code>import icon from "./icon.png" with { type: "file" };
+// icon is a path that resolves inside the compiled binary at runtime
+console.log(await Bun.file(icon).bytes());</code></pre>
+
+<h2>Dockerizing a Bun app</h2>
+<pre><code># Dockerfile
+FROM oven/bun:1.4.2 AS base
+WORKDIR /app
+
+# install deps first for layer caching
+FROM base AS deps
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile --production
+
+# runtime image
+FROM base AS release
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NODE_ENV=production
+EXPOSE 3000
+USER bun
+CMD ["bun", "run", "src/index.ts"]</code></pre>
+<pre><code>docker build -t my-bun-app .
+docker run -p 3000:3000 --env-file .env.production my-bun-app</code></pre>
+
+<h2>Production install</h2>
+<pre><code>bun install --frozen-lockfile --production   # skip devDependencies, fail on lockfile drift
+NODE_ENV=production bun run src/index.ts      # run in prod mode</code></pre>
+<div class="note">A compiled <code>--compile</code> binary is often the simplest deploy for CLIs and single-service apps: copy one file, run it, no runtime to install. Use the Docker image when you need the full <code>node_modules</code> tree or orchestration.</div>
+
+<h2>Where to go next</h2>
+<p>You've now toured Bun's built-in standard library end to end. Every section links to its official reference at the top — bookmark <a href="https://bun.com/docs" target="_blank" rel="noopener">bun.com/docs</a> and <a href="https://bun.com/reference/bun" target="_blank" rel="noopener">bun.com/reference/bun</a> for the full API surface.</p>

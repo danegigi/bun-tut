@@ -1,0 +1,112 @@
+<p>Bun has two built-in database APIs: <code>bun:sqlite</code>, a fast low-level SQLite driver, and <code>Bun.sql</code> (via <code>Bun.SQL</code>), a unified Promise-based client for <strong>PostgreSQL, MySQL, and SQLite</strong> using tagged-template queries.</p>
+
+<h2>bun:sqlite — the low-level SQLite driver</h2>
+<pre><code>import { Database } from "bun:sqlite";
+
+const db = new Database("app.db");           // or ":memory:"
+db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT)");
+
+// Prepared statements (reused, fast)
+const insert = db.query("INSERT INTO users (name) VALUES (?)");
+insert.run("Alice");
+insert.run("Bob");
+
+// Query rows
+const all = db.query("SELECT * FROM users").all();       // [{id,name}, ...]
+const one = db.query("SELECT * FROM users WHERE id = ?").get(1);
+const names = db.query("SELECT name FROM users").values(); // [["Alice"], ...]
+
+// Named parameters
+db.query("SELECT * FROM users WHERE name = $name").all({ $name: "Alice" });</code></pre>
+
+<h3>Transactions</h3>
+<pre><code>const insertMany = db.transaction((people) =&gt; {
+  for (const name of people) insert.run(name);
+});
+insertMany(["Carol", "Dave", "Eve"]);   // all-or-nothing</code></pre>
+<div class="note">Enable WAL mode for better concurrency: <code>db.run("PRAGMA journal_mode = WAL")</code>. Use <code>bun:sqlite</code> when you want direct, synchronous SQLite access; use <code>Bun.sql</code> below when you want one API across databases.</div>
+
+<h2>Bun.sql — unified SQL client</h2>
+<p>The same tagged-template interface targets Postgres (default), MySQL, or SQLite, chosen from the connection string. Values in <code>${...}</code> are always parameterized — safe against SQL injection.</p>
+<pre><code>import { sql, SQL } from "bun";
+
+// PostgreSQL (default) — uses DATABASE_URL / POSTGRES_URL env vars
+const users = await sql`SELECT * FROM users WHERE active = ${true} LIMIT ${10}`;
+
+// MySQL
+const mysql = new SQL("mysql://user:pass@localhost:3306/mydb");
+await mysql`SELECT * FROM users WHERE id = ${42}`;
+
+// SQLite
+const lite = new SQL("sqlite://app.db");
+await lite`SELECT * FROM users WHERE id = ${1}`;</code></pre>
+
+<h3>Inserting &amp; the sql() helper</h3>
+<pre><code>const user = { name: "Alice", email: "alice@example.com" };
+
+// object helper expands to (name, email) VALUES (...)
+const [created] = await sql`INSERT INTO users ${sql(user)} RETURNING *`;
+
+// bulk insert from an array of objects
+const many = [{ name: "Bob" }, { name: "Carol" }];
+await sql`INSERT INTO users ${sql(many)}`;
+
+// pick columns
+await sql`INSERT INTO users ${sql(user, "name")}`;   // name only</code></pre>
+
+<h3>Result formats</h3>
+<pre><code>await sql`SELECT * FROM users`;          // [{ name, email }, ...]  (default: objects)
+await sql`SELECT * FROM users`.values(); // [["Alice","a@x"], ...]  (arrays)
+await sql`SELECT * FROM users`.raw();    // [[Buffer, Buffer], ...] (binary)</code></pre>
+
+<h3>Dynamic fragments (safely)</h3>
+<pre><code>const minAge = 21;
+const ageFilter = sql`AND age &gt; ${minAge}`;
+await sql`
+  SELECT * FROM users
+  WHERE active = ${true}
+  ${wantAge ? ageFilter : sql``}
+`;
+
+// dynamic table name (escaped)
+await sql`SELECT * FROM ${sql("users")}`;
+
+// WHERE IN
+await sql`SELECT * FROM users WHERE id IN ${sql([1, 2, 3])}`;</code></pre>
+
+<h3>Transactions &amp; savepoints</h3>
+<pre><code>await sql.begin(async (tx) =&gt; {
+  await tx`INSERT INTO users (name) VALUES (${"Alice"})`;
+  await tx`UPDATE accounts SET balance = balance - 100 WHERE user_id = 1`;
+  // auto-COMMIT on success, auto-ROLLBACK on throw
+
+  await tx.savepoint(async (sp) =&gt; {
+    await sp`UPDATE users SET status = 'active'`;
+    // can roll back to here independently
+  });
+});</code></pre>
+
+<h3>Connection pooling &amp; reserved connections</h3>
+<pre><code>const pool = new SQL({ max: 20, idleTimeout: 30 });
+
+// exclusive connection from the pool
+using reserved = await pool.reserve();
+await reserved`SELECT 1`;         // auto-released at scope end
+
+await pool.close();               // drain and close</code></pre>
+
+<h3>LISTEN / NOTIFY (PostgreSQL)</h3>
+<pre><code>const sub = await sql.listen("orders", (payload) =&gt; {
+  console.log("new order", JSON.parse(payload));
+});
+await sql.notify("orders", JSON.stringify({ id: 42 }));
+await sub.unlisten();</code></pre>
+
+<h3>Typed errors</h3>
+<pre><code>try {
+  await sql`INSERT INTO users (id) VALUES (1)`;
+} catch (err) {
+  if (err instanceof SQL.PostgresError) console.log(err.code, err.detail);
+  else if (err instanceof SQL.SQLiteError) console.log(err.code, err.errno);
+}</code></pre>
+<div class="note">Large integers: Postgres <code>bigint</code> and out-of-range MySQL <code>BIGINT</code> come back as strings by default to avoid precision loss. Pass <code>{ bigint: true }</code> to the client to get real <code>BigInt</code> values instead.</div>

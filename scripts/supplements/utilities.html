@@ -1,0 +1,62 @@
+<p>A grab-bag of small, fast helpers on the <code>Bun</code> global that save you a dependency or a few lines.</p>
+
+<h2>Environment</h2>
+<pre><code>Bun.env.API_KEY            // like process.env, populated from .env files
+Bun.env.NODE_ENV ?? "development"</code></pre>
+
+<h2>Timing</h2>
+<pre><code>await Bun.sleep(1000);      // async pause, 1s (also accepts a Date)
+Bun.sleepSync(50);          // blocking pause — use sparingly
+Bun.nanoseconds();          // ns since process start (high-res timing)
+
+const start = Bun.nanoseconds();
+doWork();
+console.log((Bun.nanoseconds() - start) / 1e6, "ms");</code></pre>
+
+<h2>Locating executables</h2>
+<pre><code>Bun.which("node");         // "/usr/local/bin/node" or null
+Bun.which("git", { PATH: "/usr/bin" });</code></pre>
+
+<h2>HTML escaping</h2>
+<pre><code>Bun.escapeHTML('&lt;script&gt;alert("x")&lt;/script&gt;');
+// "&amp;lt;script&amp;gt;alert(&amp;quot;x&amp;quot;)&amp;lt;/script&amp;gt;"</code></pre>
+
+<h2>Deep equality</h2>
+<pre><code>Bun.deepEquals({ a: [1, 2] }, { a: [1, 2] });        // true
+Bun.deepEquals({ a: 1 }, { a: 1, b: undefined });    // false
+Bun.deepEquals({ a: 1 }, { a: 1, b: undefined }, true); // strict: also false</code></pre>
+
+<h2>Peeking at promises</h2>
+<p><code>Bun.peek</code> reads a promise's value synchronously <em>if it's already settled</em> — useful in hot paths to skip an <code>await</code> tick.</p>
+<pre><code>const p = Promise.resolve(42);
+Bun.peek(p);                 // 42 (already resolved)
+Bun.peek.status(p);          // "fulfilled" | "rejected" | "pending"
+
+const pending = fetch("...");
+Bun.peek(pending);           // returns the promise itself (not settled yet)</code></pre>
+
+<h2>Compression</h2>
+<pre><code>const data = new TextEncoder().encode("compress me".repeat(100));
+
+const gz = Bun.gzipSync(data);        // Uint8Array
+const back = Bun.gunzipSync(gz);
+
+Bun.deflateSync(data);   Bun.inflateSync(...);
+Bun.zstdCompressSync(data);   // zstd</code></pre>
+
+<h2>File helpers</h2>
+<pre><code>await Bun.file("a.txt").exists();
+Bun.pathToFileURL("/tmp/x.txt");    // file:// URL
+Bun.fileURLToPath("file:///tmp/x.txt");</code></pre>
+
+<h2>Quick reference</h2>
+<table>
+<tr><th>Helper</th><th>Purpose</th></tr>
+<tr><td><code>Bun.sleep(ms)</code></td><td>Async delay</td></tr>
+<tr><td><code>Bun.nanoseconds()</code></td><td>High-res timer</td></tr>
+<tr><td><code>Bun.which(cmd)</code></td><td>Find executable on PATH</td></tr>
+<tr><td><code>Bun.escapeHTML(s)</code></td><td>Escape HTML entities</td></tr>
+<tr><td><code>Bun.deepEquals(a,b)</code></td><td>Deep structural equality</td></tr>
+<tr><td><code>Bun.peek(p)</code></td><td>Sync-read a settled promise</td></tr>
+<tr><td><code>Bun.gzipSync / zstdCompressSync</code></td><td>Compression</td></tr>
+</table>
