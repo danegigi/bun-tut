@@ -208,7 +208,7 @@ console.log(stories);   // [{ title, url }, ...]
 await view.click("a.morelink");
 await view.screenshot({ format: "jpeg", quality: 80, encoding: "buffer" });</code></pre>
 <p>Input methods dispatch <em>native</em> events (<code>isTrusted: true</code>), <code>click(selector)</code> waits for the element to become actionable, and <code>using</code>/<code>await using</code> auto-closes the view. For persistence across runs, pass <code>dataStore: { directory: "./profile" }</code>.</p>
-<div class="verify">⚠️ <code>Bun.WebView</code> is marked experimental in the reference and its API may change. On Linux/Windows it drives an installed Chrome/Chromium/Edge/Brave over CDP; on macOS it uses the system WebKit with nothing to install.</div>
+<div class="note">Confirmed against the <a href="https://bun.com/reference/bun/WebView" target="_blank" rel="noopener">Bun 1.4.2 reference</a>: constructor options (<code>width</code>, <code>height</code>, <code>url</code>, <code>backend</code>, <code>console</code>, <code>dataStore</code>), the <code>click(selector, { timeout, button, clickCount, modifiers })</code> actionability wait, and the <code>Modifier</code> / <code>VirtualKey</code> sets are all as documented. On macOS the default <code>"webkit"</code> backend uses the system WebKit (nothing to install); on Linux/Windows pass <code>backend: "chrome"</code> to drive an installed Chrome/Chromium/Edge over the DevTools Protocol.</div>
 
 <div class="pager">
 <a class="prev" href="security-crypto.html"><small>Previous</small>🔐 Security & Crypto</a>

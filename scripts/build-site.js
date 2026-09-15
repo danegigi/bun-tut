@@ -222,7 +222,7 @@ function landing() {
 <div class="grid">
 ${cards}
 </div>
-<p style="color:var(--muted);font-size:13px;text-align:center">Built for the latest Bun. Sections marked with a ⚠️ note are pending verification against the live reference.</p>
+<p style="color:var(--muted);font-size:13px;text-align:center">Every builtin verified against the <a href="https://bun.com/reference/bun" target="_blank" rel="noopener">Bun 1.4.2 reference</a>.</p>
 </main>
 </body>
 </html>`;

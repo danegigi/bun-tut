@@ -169,7 +169,7 @@ if (!token) {
 }
 
 await secrets.delete({ service: "my-cli", name: "github-token" });</code></pre>
-<div class="verify">⚠️ <code>Bun.secrets</code> is marked experimental in the reference and may change. It's meant for local development tools — use real secret management (or env vars) for production servers.</div>
+<div class="note">Confirmed against the <a href="https://bun.com/reference/bun/secrets" target="_blank" rel="noopener">Bun 1.4.2 reference</a>: <code>get</code>, <code>set</code>, and <code>delete</code> each take <code>{ service, name }</code> (<code>set</code> also takes <code>value</code>, and an optional <code>allowUnrestrictedAccess</code>). It's designed for local development tools — use real secret management (or env vars) for production servers.</div>
 
 <div class="pager">
 <a class="prev" href="test-runner.html"><small>Previous</small>✅ Test Runner</a>

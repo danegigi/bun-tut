@@ -24,9 +24,9 @@ Live site (GitHub Pages): served from `main` `/docs`.
 
 ## Verification
 
-Every API was verified against the published `bun-types@1.4.2` type definitions. First-party builtins confirmed real in 1.4.2 include: `Bun.cron`, `Bun.WebView`, `Bun.s3`/`S3Client`, `Bun.sql`/`SQL`, `Bun.markdown`, `Bun.Image`, `Bun.Archive`, `Bun.Glob`, `Bun.TOML`, `Bun.YAML`, `Bun.JSON5`, `Bun.CSRF`, `Bun.secrets`, `Bun.password`, `Bun.hash`, `Bun.CryptoHasher`, `Bun.color`, `Bun.stringWidth`, `Bun.spawn`.
+Every API was verified against the live [Bun 1.4.2 reference](https://bun.com/reference/bun) (and the published `bun-types@1.4.2` type definitions). First-party builtins confirmed real in 1.4.2 include: `Bun.cron`, `Bun.WebView`, `Bun.s3`/`S3Client`, `Bun.sql`/`SQL`, `Bun.markdown`, `Bun.Image`, `Bun.Archive`, `Bun.Glob`, `Bun.TOML`, `Bun.YAML`, `Bun.JSON5`, `Bun.CSRF`, `Bun.secrets`, `Bun.password`, `Bun.hash`, `Bun.CryptoHasher`, `Bun.color`, `Bun.stringWidth`, `Bun.spawn`.
 
-Two APIs are marked **experimental** in the reference (noted inline): `Bun.WebView` and `Bun.secrets`.
+No sections remain pending verification. `Bun.WebView` and `Bun.secrets` are documented in the reference with no experimental banner (an "experimental" note appears only in some guide prose, not the canonical reference).
 
 ## Build
 
