@@ -49,6 +49,19 @@ Bun.zstdCompressSync(data);   // zstd</code></pre>
 Bun.pathToFileURL("/tmp/x.txt");    // file:// URL
 Bun.fileURLToPath("file:///tmp/x.txt");</code></pre>
 
+<h2>UUIDs &amp; misc</h2>
+<pre><code>crypto.randomUUID();       // standard v4 (Web Crypto — built in)
+Bun.randomUUIDv7();        // time-ordered v7 — sortable, great for DB keys
+Bun.randomUUIDv5("name", "dns");   // deterministic v5 from a namespace
+
+// deep partial match (does b's shape appear in a?)
+Bun.deepMatch({ a: 1, b: 2 }, { a: 1 });        // true
+
+// ANSI helpers for terminal output
+Bun.stripANSI("\x1b[31mred\x1b[0m");   // "red"
+Bun.stringWidth("café");               // 4</code></pre>
+<div class="note">Bun also ships larger built-in clients beyond these helpers: <code>Bun.redis</code> (a Redis client) and <code>Bun.SQL</code> (see <a href="databases.html">Databases</a>), plus <code>Bun.Transpiler</code> for programmatic TS→JS. They're documented in the <a href="https://bun.com/reference/bun" target="_blank" rel="noopener">reference index</a>.</div>
+
 <h2>Quick reference</h2>
 <table>
 <tr><th>Helper</th><th>Purpose</th></tr>

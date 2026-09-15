@@ -11,11 +11,11 @@ Live site (GitHub Pages): served from `main` `/docs`.
 3. CLI & Runtime — `bun run`, `--watch`/`--hot`, `--print`, shebang
 4. Networking — `Bun.serve`, WebSockets, TCP, UDP, `fetch`, Workers
 5. File I/O — `Bun.file`, `Bun.write`, `BunFile`, streams, `s3://`
-6. Shell, Terminal, Spawn & Cron — `Bun.$`, terminal utils, `Bun.spawn`, `Bun.cron` + a CLI-app example
+6. Shell, Terminal, Spawn & Cron — `Bun.$`, terminal utils, `Bun.Terminal` (PTY), `Bun.spawn`, `Bun.cron` + a CLI-app example
 7. Databases — `bun:sqlite` + unified `Bun.sql` (Postgres/MySQL/SQLite)
 8. Test Runner — `bun test`, matchers, mocks, snapshots, coverage
 9. Security & Crypto — `Bun.password`, `Bun.hash`, `CryptoHasher`, `Bun.CSRF`, `Bun.secrets`
-10. Data, Content & Automation — JSON/YAML/TOML/JSON5, `Bun.markdown`, `Bun.Image`, `Bun.Archive`, `Bun.Glob`, `Bun.color`, `Bun.WebView` scraping
+10. Data, Content & Automation — JSON/YAML/TOML/JSON5/JSONC/JSONL/XML, `Bun.markdown`, `Bun.Image`, `Bun.Archive`, `Bun.Glob`, `Bun.color`, `Bun.WebView` scraping
 11. Utilities — `Bun.sleep`, `which`, `escapeHTML`, `peek`, `deepEquals`, compression
 12. Web Dev — Hono, JWT refresh tokens in HttpOnly cookies, SSO (OAuth2/OIDC), `Bun.s3`
 13. E2E & Deploying — Playwright E2E, `bun build`, `--compile` executables, Docker, production

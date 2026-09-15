@@ -19,6 +19,53 @@ YAML.parse("---\na: 1\n---\nb: 2");                    // [{a:1},{b:2}]</code></
 <pre><code>import config from "./config.yaml";        // default = whole doc
 import { database, redis } from "./config.yaml";  // top-level keys = named exports</code></pre>
 
+<h2>JSONC &amp; JSONL</h2>
+<p><strong>JSONC</strong> is JSON with comments and trailing commas (think <code>tsconfig.json</code>). <strong>JSONL</strong> is JSON Lines — one JSON value per line — common for logs and data streams.</p>
+<pre><code>import { JSONC, JSONL } from "bun";
+
+// JSONC — comments + trailing commas allowed
+const cfg = JSONC.parse(`{
+  // app config
+  "name": "my-app",
+  "version": "1.0.0",   /* trailing comma ok */
+}`);
+
+// JSONL — array of values, one per line
+const rows = JSONL.parse('{"a":1}\n{"b":2}\n');   // [{a:1},{b:2}]
+
+// JSONL streaming — parseChunk never throws; returns { values, read, done, error }
+let buffer = new Uint8Array(0);
+for await (const chunk of stream) {
+  buffer = Buffer.concat([buffer, chunk]);
+  const { values, read, error } = JSONL.parseChunk(buffer);
+  if (error) throw error;
+  for (const v of values) handle(v);
+  buffer = buffer.subarray(read);      // keep the unconsumed remainder
+}</code></pre>
+<div class="note"><code>JSONL.parse</code> returns whatever parsed successfully before an error (throwing only if <em>nothing</em> valid preceded it), and silently ignores an incomplete trailing line — which is exactly what you want when reading partial chunks.</div>
+
+<h2>Bun.XML</h2>
+<p>A conforming, non-validating XML 1.0 parser and serializer. The default <em>compact</em> shape keys elements by name, with <code>@attr</code> for attributes and <code>#text</code> for character data.</p>
+<pre><code>import { XML } from "bun";
+
+// Parse (compact shape — good for data)
+XML.parse(`&lt;order id="A1"&gt;&lt;item sku="x"&gt;Tea&lt;/item&gt;&lt;item sku="y"&gt;Mug&lt;/item&gt;&lt;paid/&gt;&lt;/order&gt;`);
+// {
+//   order: {
+//     "@id": "A1",
+//     item: [ { "@sku": "x", "#text": "Tea" }, { "@sku": "y", "#text": "Mug" } ],
+//     paid: "",
+//   },
+// }
+
+// Document-order tree (keeps text position, comments, PIs)
+XML.parse("&lt;p&gt;Hello &lt;b&gt;world&lt;/b&gt;!&lt;/p&gt;", { compact: false });
+
+// Serialize (prepend the XML declaration yourself when writing a file)
+const xml = XML.stringify({ order: { "@id": "A1", item: ["Tea", "Mug"], paid: null } }, null, 2);
+// &lt;order id="A1"&gt;...&lt;/order&gt;</code></pre>
+<div class="note">Security: <code>Bun.XML</code> never reads external DTDs or external entities (no XXE), and every value comes back as a string — nothing is coerced. Input must be well-formed or it throws a <code>SyntaxError</code>.</div>
+
 <h2>Bun.markdown — render markdown</h2>
 <p>Parse and render markdown to HTML, ANSI (for terminals), or React elements. GFM tables, strikethrough, and task lists are on by default.</p>
 <pre><code>// to HTML

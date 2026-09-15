@@ -68,6 +68,7 @@ pre:hover .copy{opacity:1}
 <nav class="toc"><strong>On this page</strong><ul>
 <li class="lvl2"><a href="#bun-the-shell">Bun.$ — the shell</a></li>
 <li class="lvl2"><a href="#terminal-utilities">Terminal utilities</a></li>
+<li class="lvl2"><a href="#bunterminal-pseudo-terminals-pty">Bun.Terminal — pseudo-terminals (PTY)</a></li>
 <li class="lvl2"><a href="#bunspawn-subprocesses">Bun.spawn — subprocesses</a></li>
 <li class="lvl2"><a href="#buncron-scheduling">Bun.cron — scheduling</a></li>
 <li class="lvl3"><a href="#in-process-jobs">In-process jobs</a></li>
@@ -113,6 +114,26 @@ Bun.stringWidth("hi");      // 2
 Bun.stringWidth("🥟");      // 2  (wide)
 Bun.stringWidth("日本");     // 4</code></pre>
 <div class="note"><code>Bun.stringWidth</code> is what you want for aligning columns in a terminal table — <code>"🥟".length</code> is <code>2</code> code units but the glyph occupies <code>2</code> columns, and CJK characters occupy 2 columns each. <code>String.length</code> gets both wrong.</div>
+
+<h2 id="bunterminal-pseudo-terminals-pty">Bun.Terminal — pseudo-terminals (PTY)</h2>
+<p><code>Bun.Terminal</code> creates a real PTY so you can drive interactive terminal programs (a shell, <code>vim</code>, an SSH session) and capture their output — the backbone of a web terminal or a test harness for CLI apps.</p>
+<pre><code>await using terminal = new Bun.Terminal({
+  cols: 80,
+  rows: 24,
+  data(term, data) {
+    process.stdout.write(new TextDecoder().decode(data));   // stream PTY output
+  },
+});
+
+// Spawn a shell attached to the PTY
+const proc = Bun.spawn(["bash"], { terminal });
+
+terminal.write("echo hello\n");      // send input
+terminal.resize(120, 40);            // handle a window resize
+terminal.setRawMode(true);           // pass input through unprocessed
+
+await proc.exited;                   // terminal auto-closes via `await using`</code></pre>
+<div class="note">The <code>data(term, bytes)</code> callback receives raw PTY output (including ANSI escape sequences) as it arrives. <code>write()</code> buffers anything that can't flush immediately, so never re-send based on its return value. termios flags (<code>controlFlags</code>, <code>inputFlags</code>, <code>localFlags</code>, <code>outputFlags</code>) are exposed for advanced control.</div>
 
 <h2 id="bunspawn-subprocesses">Bun.spawn — subprocesses</h2>
 <pre><code>// Async spawn
