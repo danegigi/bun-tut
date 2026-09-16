@@ -208,9 +208,22 @@ test("GET /orders/:id returns 404 for missing", async () =&gt; {
 <a class="next" href="security-crypto.html"><small>Next</small>🔐 Security & Crypto</a>
 </div>
 </main>
-<button class="fab try" onclick="window.open('https://bun.com/repl','_blank')">▶ Try in Bun</button>
-<button class="fab top" onclick="scrollTo({top:0,behavior:'smooth'})">↑ Top</button>
+<button type="button" class="fab try" id="fab-try">▶ Try in Bun</button>
+<button type="button" class="fab top" id="fab-top">↑ Top</button>
 <script>
+document.getElementById('fab-try').addEventListener('click', function(){
+  window.open('https://bun.com/repl', '_blank', 'noopener');
+});
+document.getElementById('fab-top').addEventListener('click', function(){
+  var el = document.scrollingElement || document.documentElement || document.body;
+  try {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  } catch (e) {
+    window.scrollTo(0, 0);
+  }
+  // Hard fallback if the smooth scroll was a no-op
+  if (el.scrollTop > 0) el.scrollTop = 0;
+});
 document.querySelectorAll('pre').forEach(function(pre){
   var b=document.createElement('button');b.className='copy';b.textContent='Copy';
   b.addEventListener('click',function(){
