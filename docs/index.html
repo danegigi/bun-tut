@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bun Tutorial — builtins & standards, junior→mid</title>
+<title>Bun Tutorial — built-in standard library reference</title>
 <style>
 :root{
   --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --text:#e6edf3; --muted:#8b949e;
@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -66,22 +71,22 @@ pre:hover .copy{opacity:1}
 <div class="hero">
 <div class="logo">🥟</div>
 <h1>Bun Tutorial</h1>
-<p>A comprehensive but approachable tour of Bun's built-in standard library — runnable examples for every builtin, with an official reference link in each section. Aimed at junior→mid developers.</p>
+<p>A practical, in-depth tour of Bun's built-in standard library — runnable, real-world examples for every builtin, each section carrying official reference links for further reading. Written for developers building production services who want the depth behind each API, not just its shape.</p>
 </div>
 <div class="grid">
-<a class="card" href="getting-started.html"><div class="n">01</div><h3>🚀 Getting Started</h3><p>Install Bun, scaffold a project, run TS/JS natively, bunfig.toml, env loading.</p></a>
-<a class="card" href="package-manager.html"><div class="n">02</div><h3>📦 Package Manager</h3><p>bun install/add/remove, bun.lockb, bun outdated, workspaces, bunx.</p></a>
-<a class="card" href="cli-runtime.html"><div class="n">03</div><h3>⚡ CLI & Runtime</h3><p>bun run, bunx, --watch/--hot, --print, shebang, command reference.</p></a>
-<a class="card" href="networking.html"><div class="n">04</div><h3>🌐 Networking</h3><p>Bun.serve, WebSockets, TCP, UDP, fetch, and Workers.</p></a>
-<a class="card" href="file-io.html"><div class="n">05</div><h3>📄 File I/O</h3><p>Bun.file, Bun.write, BunFile, streams, and the s3:// protocol.</p></a>
-<a class="card" href="shell-terminal-cron.html"><div class="n">06</div><h3>🖥️ Shell, Terminal, Spawn & Cron</h3><p>Bun.$, terminal utils, Bun.Terminal PTY, Bun.spawn, Bun.cron, and a CLI-app example.</p></a>
-<a class="card" href="databases.html"><div class="n">07</div><h3>🗄️ Databases: SQLite & SQL</h3><p>bun:sqlite plus the unified Bun.sql client (Postgres / MySQL / SQLite).</p></a>
-<a class="card" href="test-runner.html"><div class="n">08</div><h3>✅ Test Runner</h3><p>bun test, matchers, mocks, snapshots, lifecycle hooks, coverage.</p></a>
-<a class="card" href="security-crypto.html"><div class="n">09</div><h3>🔐 Security & Crypto</h3><p>Bun.password, Bun.hash, CryptoHasher, Bun.CSRF, and Bun.secrets.</p></a>
-<a class="card" href="data-content.html"><div class="n">10</div><h3>🧩 Data, Content & Automation</h3><p>JSON/YAML/TOML/JSONC/JSONL/XML, Markdown, Image, archives, Glob, and WebView scraping.</p></a>
-<a class="card" href="utilities.html"><div class="n">11</div><h3>🛠️ Utilities</h3><p>Bun.env, sleep, which, escapeHTML, peek, deepEquals, nanoseconds.</p></a>
-<a class="card" href="web-hono-auth.html"><div class="n">12</div><h3>🔑 Web Dev: Hono + Auth + Storage</h3><p>Hono app, JWT refresh tokens in HttpOnly cookies, SSO, and Bun.s3 storage.</p></a>
-<a class="card" href="e2e-deploy.html"><div class="n">13</div><h3>🚢 E2E Testing & Deploying</h3><p>Playwright E2E, bun build, --compile executables, Docker, production.</p></a>
+<a class="card" href="getting-started.html"><div class="n">01</div><h3>🚀 Getting Started</h3><p>Install, scaffold, run TS/JS natively, bunfig.toml, and env resolution order.</p></a>
+<a class="card" href="package-manager.html"><div class="n">02</div><h3>📦 Package Manager</h3><p>install/add/remove, the binary lockfile, bun outdated, workspaces, overrides, bunx.</p></a>
+<a class="card" href="cli-runtime.html"><div class="n">03</div><h3>⚡ CLI & Runtime</h3><p>bun run, bunx, --watch/--hot semantics, --print, shebangs, the full flag set.</p></a>
+<a class="card" href="networking.html"><div class="n">04</div><h3>🌐 Networking</h3><p>Bun.serve routing, WebSockets + pub/sub, raw TCP/UDP, fetch extensions, Workers.</p></a>
+<a class="card" href="file-io.html"><div class="n">05</div><h3>📄 File I/O</h3><p>Bun.file, Bun.write, incremental writers, streaming, and the s3:// protocol.</p></a>
+<a class="card" href="shell-terminal-cron.html"><div class="n">06</div><h3>🖥️ Shell, Terminal, Spawn & Cron</h3><p>Bun.$ scripting, terminal width, Bun.Terminal PTY, Bun.spawn, Bun.cron, a real CLI.</p></a>
+<a class="card" href="databases.html"><div class="n">07</div><h3>🗄️ Databases: SQLite, SQL, Drizzle & MongoDB</h3><p>bun:sqlite, the unified Bun.sql client, Drizzle ORM (basic→advanced), and MongoDB.</p></a>
+<a class="card" href="test-runner.html"><div class="n">08</div><h3>✅ Test Runner</h3><p>bun test, matchers, mocks/spies, snapshots, lifecycle hooks, coverage, DOM testing.</p></a>
+<a class="card" href="security-crypto.html"><div class="n">09</div><h3>🔐 Security & Crypto</h3><p>Bun.password (argon2/bcrypt), Bun.hash, CryptoHasher + HMAC, Bun.CSRF, Bun.secrets.</p></a>
+<a class="card" href="data-content.html"><div class="n">10</div><h3>🧩 Data, Content & Automation</h3><p>JSON/YAML/TOML/JSONC/JSONL/XML, Markdown, Image pipeline, archives, Glob, WebView scraping.</p></a>
+<a class="card" href="utilities.html"><div class="n">11</div><h3>🛠️ Utilities</h3><p>Timing, which, escapeHTML, peek, deepEquals, compression, UUID v5/v7, ANSI helpers.</p></a>
+<a class="card" href="web-hono-auth.html"><div class="n">12</div><h3>🔑 Web Dev: Hono + Auth + Storage</h3><p>Hono app, JWT access + refresh rotation in HttpOnly cookies, OAuth2/OIDC SSO, Bun.s3.</p></a>
+<a class="card" href="e2e-deploy.html"><div class="n">13</div><h3>🚢 E2E Testing & Deploying</h3><p>Playwright E2E under Bun, bun build, --compile standalone binaries, Docker, production.</p></a>
 </div>
 <p style="color:var(--muted);font-size:13px;text-align:center">Every builtin verified against the <a href="https://bun.com/reference/bun" target="_blank" rel="noopener">Bun 1.4.2 reference</a>.</p>
 </main>

@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -136,6 +141,12 @@ console.log(`Running on Bun ${Bun.version} (${Bun.revision.slice(0, 7)})`);</cod
 # Hello, Ada!
 # Running on Bun 1.4.2 (…)</code></pre>
 
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://bun.com/docs/installation" target="_blank" rel="noopener">Installation ↗</a></li>
+<li><a href="https://bun.com/docs/runtime/bunfig" target="_blank" rel="noopener">bunfig.toml reference ↗</a></li>
+<li><a href="https://bun.com/docs/runtime/env" target="_blank" rel="noopener">Environment variables ↗</a></li>
+<li><a href="https://bun.com/docs/runtime/typescript" target="_blank" rel="noopener">TypeScript support ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="index.html"><small>Home</small>All sections</a>
 <a class="next" href="package-manager.html"><small>Next</small>📦 Package Manager</a>

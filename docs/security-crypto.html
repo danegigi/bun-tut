@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -71,6 +76,7 @@ pre:hover .copy{opacity:1}
 <li class="lvl2"><a href="#buncryptohasher-cryptographic-hashing-hmac">Bun.CryptoHasher — cryptographic hashing &amp; HMAC</a></li>
 <li class="lvl2"><a href="#buncsrf-csrf-tokens">Bun.CSRF — CSRF tokens</a></li>
 <li class="lvl2"><a href="#bunsecrets-os-credential-storage">Bun.secrets — OS credential storage</a></li>
+<li class="lvl2"><a href="#real-life-example-signup-login-api-keys">Real-life example: signup, login &amp; API keys</a></li>
 </ul></nav>
 <p>Bun's security toolkit covers password hashing, fast non-cryptographic hashing, incremental cryptographic hashing/HMAC, CSRF tokens, and OS-native secret storage — all first-party, no npm packages.</p>
 
@@ -171,6 +177,53 @@ if (!token) {
 await secrets.delete({ service: "my-cli", name: "github-token" });</code></pre>
 <div class="note">Confirmed against the <a href="https://bun.com/reference/bun/secrets" target="_blank" rel="noopener">Bun 1.4.2 reference</a>: <code>get</code>, <code>set</code>, and <code>delete</code> each take <code>{ service, name }</code> (<code>set</code> also takes <code>value</code>, and an optional <code>allowUnrestrictedAccess</code>). It's designed for local development tools — use real secret management (or env vars) for production servers.</div>
 
+<h2 id="real-life-example-signup-login-api-keys">Real-life example: signup, login &amp; API keys</h2>
+<p>An auth module a route layer would call — password hashing on signup, verification on login, and issuing hashed API keys (store only the hash; show the raw key once).</p>
+<pre><code>import { timingSafeEqual } from "node:crypto";
+
+// Signup — hash the password (argon2id), never store plaintext
+export async function signup(email: string, password: string) {
+  if (password.length &lt; 10) throw new Error("weak password");
+  const passwordHash = await Bun.password.hash(password);   // argon2id + random salt
+  return db.insert(users).values({ email, passwordHash }).returning();
+}
+
+// Login — verify is constant-time and self-describing (reads the algorithm from the hash)
+export async function login(email: string, password: string) {
+  const user = await findUserByEmail(email);
+  // Always run a verify even when the user is missing, to avoid leaking
+  // account existence through response timing.
+  const hash = user?.passwordHash ?? "$argon2id$v=19$m=65536,t=2,p=1$AAAA$AAAA";
+  const ok = await Bun.password.verify(password, hash);
+  if (!user || !ok) throw new Error("invalid credentials");
+  return user;
+}
+
+// Issue an API key: return the raw key ONCE, persist only its SHA-256
+export async function issueApiKey(userId: number) {
+  const raw = "sk_" + crypto.randomUUID().replaceAll("-", "");
+  const keyHash = new Bun.CryptoHasher("sha256").update(raw).digest("hex");
+  await db.insert(apiKeys).values({ userId, keyHash });
+  return raw;                     // show once — it is never recoverable again
+}
+
+// Verify an incoming API key in constant time
+export async function verifyApiKey(raw: string) {
+  const keyHash = new Bun.CryptoHasher("sha256").update(raw).digest("hex");
+  const row = await findApiKeyByHash(keyHash);
+  if (!row) return null;
+  // timingSafeEqual guards against timing attacks on the hash comparison
+  const a = Buffer.from(keyHash), b = Buffer.from(row.keyHash);
+  return a.length === b.length && timingSafeEqual(a, b) ? row.userId : null;
+}</code></pre>
+<div class="note">Why hash the API key: if your DB leaks, raw keys would be usable immediately — SHA-256 of a high-entropy random key means the leak is inert. (Passwords need a slow KDF like argon2 because they're low-entropy; random API keys don't, so a fast hash is fine.) Combine with the <a href="web-hono-auth.html">JWT refresh-token flow</a> for browser sessions and <code>Bun.CSRF</code> for cookie-authenticated form posts.</div>
+
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://bun.com/docs/api/hashing" target="_blank" rel="noopener">Hashing ↗</a></li>
+<li><a href="https://bun.com/reference/bun/CSRF" target="_blank" rel="noopener">CSRF ↗</a></li>
+<li><a href="https://bun.com/reference/bun/secrets" target="_blank" rel="noopener">Secrets ↗</a></li>
+<li><a href="https://bun.com/docs/runtime/nodejs-apis" target="_blank" rel="noopener">node:crypto ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="test-runner.html"><small>Previous</small>✅ Test Runner</a>
 <a class="next" href="data-content.html"><small>Next</small>🧩 Data, Content & Automation</a>

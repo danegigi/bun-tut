@@ -58,13 +58,18 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
 <header class="nav"><span class="brand">🥟 Bun Tutorial</span><a class="home" href="index.html">← All sections</a></header>
 <main class="wrap">
 <h1 class="page-title">🖥️ Shell, Terminal, Spawn & Cron</h1>
-<div class="ref">📖 Official reference: <a href="https://bun.com/reference/bun" target="_blank" rel="noopener">bun.com/reference/bun</a></div>
+<div class="ref">📖 Official reference: <a href="https://bun.com/docs/runtime/shell" target="_blank" rel="noopener">bun.com/docs/runtime/shell</a></div>
 <nav class="toc"><strong>On this page</strong><ul>
 <li class="lvl2"><a href="#bun-the-shell">Bun.$ — the shell</a></li>
 <li class="lvl2"><a href="#terminal-utilities">Terminal utilities</a></li>
@@ -235,9 +240,15 @@ switch (cmd) {
 ./todo.ts list
 ./todo.ts done 0</code></pre>
 
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://bun.com/docs/runtime/shell" target="_blank" rel="noopener">Bun Shell ($) ↗</a></li>
+<li><a href="https://bun.com/docs/api/spawn" target="_blank" rel="noopener">Spawn ↗</a></li>
+<li><a href="https://bun.com/reference/bun/cron" target="_blank" rel="noopener">Cron ↗</a></li>
+<li><a href="https://bun.com/reference/bun/Terminal" target="_blank" rel="noopener">Terminal (PTY) ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="file-io.html"><small>Previous</small>📄 File I/O</a>
-<a class="next" href="databases.html"><small>Next</small>🗄️ Databases: SQLite & SQL</a>
+<a class="next" href="databases.html"><small>Next</small>🗄️ Databases: SQLite, SQL, Drizzle & MongoDB</a>
 </div>
 </main>
 <button class="fab try" onclick="window.open('https://bun.com/repl','_blank')">▶ Try in Bun</button>

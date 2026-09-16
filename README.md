@@ -1,6 +1,6 @@
 # 🥟 Bun Tutorial
 
-A comprehensive but simplified tutorial of **Bun's built-in standard library**, pinned to **Bun 1.4.2**. Runnable examples for every builtin, each section carrying an official reference link. Aimed at junior→mid developers.
+A practical, in-depth tutorial of **Bun's built-in standard library**, pinned to **Bun 1.4.2**. Runnable, real-world examples for every builtin, with official reference links in each section for further reading. Written for developers building production services who want the depth behind each API.
 
 Live site (GitHub Pages): served from `main` `/docs`.
 
@@ -12,7 +12,7 @@ Live site (GitHub Pages): served from `main` `/docs`.
 4. Networking — `Bun.serve`, WebSockets, TCP, UDP, `fetch`, Workers
 5. File I/O — `Bun.file`, `Bun.write`, `BunFile`, streams, `s3://`
 6. Shell, Terminal, Spawn & Cron — `Bun.$`, terminal utils, `Bun.Terminal` (PTY), `Bun.spawn`, `Bun.cron` + a CLI-app example
-7. Databases — `bun:sqlite` + unified `Bun.sql` (Postgres/MySQL/SQLite)
+7. Databases — `bun:sqlite`, unified `Bun.sql` (Postgres/MySQL/SQLite), Drizzle ORM (basic→advanced), and MongoDB (native driver + Mongoose)
 8. Test Runner — `bun test`, matchers, mocks, snapshots, coverage
 9. Security & Crypto — `Bun.password`, `Bun.hash`, `CryptoHasher`, `Bun.CSRF`, `Bun.secrets`
 10. Data, Content & Automation — JSON/YAML/TOML/JSON5/JSONC/JSONL/XML, `Bun.markdown`, `Bun.Image`, `Bun.Archive`, `Bun.Glob`, `Bun.color`, `Bun.WebView` scraping

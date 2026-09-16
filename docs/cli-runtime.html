@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -123,6 +128,12 @@ Bun.revision     // git sha of the build
 Bun.main         // absolute path of the entry file
 Bun.env.NODE_ENV // environment</code></pre>
 
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://bun.com/docs/cli/run" target="_blank" rel="noopener">bun run ↗</a></li>
+<li><a href="https://bun.com/docs/runtime/hot" target="_blank" rel="noopener">Hot reloading ↗</a></li>
+<li><a href="https://bun.com/docs/runtime/debugger" target="_blank" rel="noopener">Debugger ↗</a></li>
+<li><a href="https://bun.com/docs/runtime/web-apis" target="_blank" rel="noopener">Web APIs in Bun ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="package-manager.html"><small>Previous</small>📦 Package Manager</a>
 <a class="next" href="networking.html"><small>Next</small>🌐 Networking</a>

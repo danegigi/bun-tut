@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -259,6 +264,15 @@ await view.screenshot({ format: "jpeg", quality: 80, encoding: "buffer" });</cod
 <p>Input methods dispatch <em>native</em> events (<code>isTrusted: true</code>), <code>click(selector)</code> waits for the element to become actionable, and <code>using</code>/<code>await using</code> auto-closes the view. For persistence across runs, pass <code>dataStore: { directory: "./profile" }</code>.</p>
 <div class="note">Confirmed against the <a href="https://bun.com/reference/bun/WebView" target="_blank" rel="noopener">Bun 1.4.2 reference</a>: constructor options (<code>width</code>, <code>height</code>, <code>url</code>, <code>backend</code>, <code>console</code>, <code>dataStore</code>), the <code>click(selector, { timeout, button, clickCount, modifiers })</code> actionability wait, and the <code>Modifier</code> / <code>VirtualKey</code> sets are all as documented. On macOS the default <code>"webkit"</code> backend uses the system WebKit (nothing to install); on Linux/Windows pass <code>backend: "chrome"</code> to drive an installed Chrome/Chromium/Edge over the DevTools Protocol.</div>
 
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://bun.com/reference/bun/YAML" target="_blank" rel="noopener">YAML ↗</a></li>
+<li><a href="https://bun.com/reference/bun/TOML" target="_blank" rel="noopener">TOML ↗</a></li>
+<li><a href="https://bun.com/reference/bun/markdown" target="_blank" rel="noopener">Markdown ↗</a></li>
+<li><a href="https://bun.com/reference/bun/Image" target="_blank" rel="noopener">Image ↗</a></li>
+<li><a href="https://bun.com/reference/bun/Archive" target="_blank" rel="noopener">Archive ↗</a></li>
+<li><a href="https://bun.com/reference/bun/Glob" target="_blank" rel="noopener">Glob ↗</a></li>
+<li><a href="https://bun.com/reference/bun/WebView" target="_blank" rel="noopener">WebView ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="security-crypto.html"><small>Previous</small>🔐 Security & Crypto</a>
 <a class="next" href="utilities.html"><small>Next</small>🛠️ Utilities</a>

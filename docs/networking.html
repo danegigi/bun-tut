@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -73,6 +78,7 @@ pre:hover .copy{opacity:1}
 <li class="lvl2"><a href="#udp-sockets">UDP sockets</a></li>
 <li class="lvl2"><a href="#fetch">fetch</a></li>
 <li class="lvl2"><a href="#workers-offload-cpu-work">Workers — offload CPU work</a></li>
+<li class="lvl2"><a href="#real-life-example-rate-limited-json-api-with-graceful-shutdown">Real-life example: rate-limited JSON API with graceful shutdown</a></li>
 </ul></nav>
 <p>Bun ships fast, native networking: an HTTP server, WebSockets, raw TCP and UDP sockets, a standard <code>fetch</code>, and Web <code>Worker</code>s for CPU-bound work.</p>
 
@@ -196,6 +202,63 @@ worker.onmessage = (e) =&gt; {
   worker.terminate();
 };</code></pre>
 
+<h2 id="real-life-example-rate-limited-json-api-with-graceful-shutdown">Real-life example: rate-limited JSON API with graceful shutdown</h2>
+<p>A production-shaped server: per-IP rate limiting with a sliding counter, structured error responses, and a clean shutdown on <code>SIGTERM</code> (what a container orchestrator sends).</p>
+<pre><code>const WINDOW_MS = 60_000, LIMIT = 100;
+const hits = new Map&lt;string, { count: number; resetAt: number }&gt;();
+
+function rateLimit(ip: string): boolean {
+  const now = Date.now();
+  const rec = hits.get(ip);
+  if (!rec || now &gt; rec.resetAt) {
+    hits.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    return true;
+  }
+  if (rec.count &gt;= LIMIT) return false;
+  rec.count++;
+  return true;
+}
+
+const server = Bun.serve({
+  port: Bun.env.PORT ?? 3000,
+  routes: {
+    "/api/orders/:id": (req, server) =&gt; {
+      const ip = server.requestIP(req)?.address ?? "unknown";
+      if (!rateLimit(ip)) {
+        return Response.json({ error: "rate_limited" }, { status: 429 });
+      }
+      return Response.json({ id: req.params.id, status: "ok" });
+    },
+  },
+  error(err) {                       // centralized error handler
+    console.error(err);
+    return Response.json({ error: "internal" }, { status: 500 });
+  },
+});
+
+// Periodically evict stale rate-limit records
+const sweep = setInterval(() =&gt; {
+  const now = Date.now();
+  for (const [ip, rec] of hits) if (now &gt; rec.resetAt) hits.delete(ip);
+}, WINDOW_MS);
+
+// Graceful shutdown — stop accepting, finish in-flight, then exit
+process.on("SIGTERM", async () =&gt; {
+  clearInterval(sweep);
+  await server.stop();               // stops after in-flight requests drain
+  process.exit(0);
+});
+
+console.log(`API on ${server.url}`);</code></pre>
+<div class="note">Production notes: this in-memory limiter is per-process — behind multiple instances, back it with Redis (<code>Bun.redis</code>) so the window is shared. <code>server.requestIP(req)</code> gives the socket peer; behind a proxy, trust <code>X-Forwarded-For</code> only from known upstreams.</div>
+
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://bun.com/docs/api/http" target="_blank" rel="noopener">HTTP server ↗</a></li>
+<li><a href="https://bun.com/docs/api/websockets" target="_blank" rel="noopener">WebSockets ↗</a></li>
+<li><a href="https://bun.com/docs/api/tcp" target="_blank" rel="noopener">TCP sockets ↗</a></li>
+<li><a href="https://bun.com/docs/api/udp" target="_blank" rel="noopener">UDP sockets ↗</a></li>
+<li><a href="https://bun.com/docs/api/workers" target="_blank" rel="noopener">Workers ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="cli-runtime.html"><small>Previous</small>⚡ CLI & Runtime</a>
 <a class="next" href="file-io.html"><small>Next</small>📄 File I/O</a>

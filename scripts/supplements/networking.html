@@ -119,3 +119,53 @@ worker.onmessage = (e) =&gt; {
   console.log("sum =", e.data);
   worker.terminate();
 };</code></pre>
+
+<h2>Real-life example: rate-limited JSON API with graceful shutdown</h2>
+<p>A production-shaped server: per-IP rate limiting with a sliding counter, structured error responses, and a clean shutdown on <code>SIGTERM</code> (what a container orchestrator sends).</p>
+<pre><code>const WINDOW_MS = 60_000, LIMIT = 100;
+const hits = new Map&lt;string, { count: number; resetAt: number }&gt;();
+
+function rateLimit(ip: string): boolean {
+  const now = Date.now();
+  const rec = hits.get(ip);
+  if (!rec || now &gt; rec.resetAt) {
+    hits.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    return true;
+  }
+  if (rec.count &gt;= LIMIT) return false;
+  rec.count++;
+  return true;
+}
+
+const server = Bun.serve({
+  port: Bun.env.PORT ?? 3000,
+  routes: {
+    "/api/orders/:id": (req, server) =&gt; {
+      const ip = server.requestIP(req)?.address ?? "unknown";
+      if (!rateLimit(ip)) {
+        return Response.json({ error: "rate_limited" }, { status: 429 });
+      }
+      return Response.json({ id: req.params.id, status: "ok" });
+    },
+  },
+  error(err) {                       // centralized error handler
+    console.error(err);
+    return Response.json({ error: "internal" }, { status: 500 });
+  },
+});
+
+// Periodically evict stale rate-limit records
+const sweep = setInterval(() =&gt; {
+  const now = Date.now();
+  for (const [ip, rec] of hits) if (now &gt; rec.resetAt) hits.delete(ip);
+}, WINDOW_MS);
+
+// Graceful shutdown — stop accepting, finish in-flight, then exit
+process.on("SIGTERM", async () =&gt; {
+  clearInterval(sweep);
+  await server.stop();               // stops after in-flight requests drain
+  process.exit(0);
+});
+
+console.log(`API on ${server.url}`);</code></pre>
+<div class="note">Production notes: this in-memory limiter is per-process — behind multiple instances, back it with Redis (<code>Bun.redis</code>) so the window is shared. <code>server.requestIP(req)</code> gives the socket peer; behind a proxy, trust <code>X-Forwarded-For</code> only from known upstreams.</div>

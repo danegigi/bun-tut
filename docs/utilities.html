@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -153,6 +158,11 @@ Bun.stringWidth("café");               // 4</code></pre>
 <tr><td><code>Bun.gzipSync / zstdCompressSync</code></td><td>Compression</td></tr>
 </table>
 
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://bun.com/docs/api/utils" target="_blank" rel="noopener">Utilities ↗</a></li>
+<li><a href="https://bun.com/reference/bun/color" target="_blank" rel="noopener">Bun.color ↗</a></li>
+<li><a href="https://bun.com/reference/bun/gzipSync" target="_blank" rel="noopener">Compression (zlib/zstd) ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="data-content.html"><small>Previous</small>🧩 Data, Content & Automation</a>
 <a class="next" href="web-hono-auth.html"><small>Next</small>🔑 Web Dev: Hono + Auth + Storage</a>

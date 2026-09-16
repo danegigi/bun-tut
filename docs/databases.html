@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Databases: SQLite & SQL — Bun Tutorial</title>
+<title>Databases: SQLite, SQL, Drizzle & MongoDB — Bun Tutorial</title>
 <style>
 :root{
   --bg:#0d1117; --panel:#161b22; --panel2:#1c2230; --text:#e6edf3; --muted:#8b949e;
@@ -58,12 +58,17 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
 <header class="nav"><span class="brand">🥟 Bun Tutorial</span><a class="home" href="index.html">← All sections</a></header>
 <main class="wrap">
-<h1 class="page-title">🗄️ Databases: SQLite & SQL</h1>
+<h1 class="page-title">🗄️ Databases: SQLite, SQL, Drizzle & MongoDB</h1>
 <div class="ref">📖 Official reference: <a href="https://bun.com/docs/api/sql" target="_blank" rel="noopener">bun.com/docs/api/sql</a></div>
 <nav class="toc"><strong>On this page</strong><ul>
 <li class="lvl2"><a href="#bunsqlite-the-low-level-sqlite-driver">bun:sqlite — the low-level SQLite driver</a></li>
@@ -76,6 +81,16 @@ pre:hover .copy{opacity:1}
 <li class="lvl3"><a href="#connection-pooling-reserved-connections">Connection pooling &amp; reserved connections</a></li>
 <li class="lvl3"><a href="#listen-notify-postgresql">LISTEN / NOTIFY (PostgreSQL)</a></li>
 <li class="lvl3"><a href="#typed-errors">Typed errors</a></li>
+<li class="lvl2"><a href="#drizzle-orm-on-bun">Drizzle ORM on Bun</a></li>
+<li class="lvl3"><a href="#schema">Schema</a></li>
+<li class="lvl3"><a href="#connect-query">Connect &amp; query</a></li>
+<li class="lvl3"><a href="#migrations-with-drizzle-kit">Migrations with drizzle-kit</a></li>
+<li class="lvl3"><a href="#advanced-joins-relations-transactions">Advanced: joins, relations, transactions</a></li>
+<li class="lvl2"><a href="#mongodb-on-bun">MongoDB on Bun</a></li>
+<li class="lvl3"><a href="#native-driver">Native driver</a></li>
+<li class="lvl3"><a href="#transactions-2">Transactions</a></li>
+<li class="lvl3"><a href="#mongoose-schemas-models">Mongoose (schemas &amp; models)</a></li>
+<li class="lvl2"><a href="#real-life-example-an-order-api-layer">Real-life example: an order API layer</a></li>
 </ul></nav>
 <p>Bun has two built-in database APIs: <code>bun:sqlite</code>, a fast low-level SQLite driver, and <code>Bun.sql</code> (via <code>Bun.SQL</code>), a unified Promise-based client for <strong>PostgreSQL, MySQL, and SQLite</strong> using tagged-template queries.</p>
 
@@ -190,6 +205,185 @@ await sub.unlisten();</code></pre>
 }</code></pre>
 <div class="note">Large integers: Postgres <code>bigint</code> and out-of-range MySQL <code>BIGINT</code> come back as strings by default to avoid precision loss. Pass <code>{ bigint: true }</code> to the client to get real <code>BigInt</code> values instead.</div>
 
+<h2 id="drizzle-orm-on-bun">Drizzle ORM on Bun</h2>
+<p>Drizzle is a typesafe SQL query builder + migration toolkit. It layers a fully-typed schema and query API over a driver — here <code>bun:sqlite</code> — while staying close to SQL (no heavy runtime, no N+1 surprises). Install:</p>
+<pre><code>bun add drizzle-orm
+bun add -d drizzle-kit @types/bun</code></pre>
+
+<h3 id="schema">Schema</h3>
+<pre><code>// src/db/schema.ts
+import { sqliteTable, int, text, index } from "drizzle-orm/sqlite-core";
+
+export const users = sqliteTable("users", {
+  id: int().primaryKey({ autoIncrement: true }),
+  name: text().notNull(),
+  email: text().notNull().unique(),
+  createdAt: int("created_at", { mode: "timestamp" }).notNull().$defaultFn(() =&gt; new Date()),
+});
+
+export const posts = sqliteTable("posts", {
+  id: int().primaryKey({ autoIncrement: true }),
+  authorId: int("author_id").notNull().references(() =&gt; users.id),
+  title: text().notNull(),
+  published: int({ mode: "boolean" }).notNull().default(false),
+}, (t) =&gt; [ index("posts_author_idx").on(t.authorId) ]);</code></pre>
+
+<h3 id="connect-query">Connect &amp; query</h3>
+<pre><code>// src/db/index.ts
+import { drizzle } from "drizzle-orm/bun-sqlite";
+import { eq, and, desc, sql as dsql } from "drizzle-orm";
+import { users, posts } from "./schema";
+
+export const db = drizzle(Bun.env.DB_FILE_NAME ?? "app.db");
+
+// Insert (typed — $inferInsert derives the input type)
+const [alice] = await db.insert(users)
+  .values({ name: "Alice", email: "alice@example.com" })
+  .returning();
+
+// Select with filters
+const active = await db.select().from(users).where(eq(users.email, "alice@example.com"));
+
+// Update / delete
+await db.update(users).set({ name: "Alice B." }).where(eq(users.id, alice.id));
+await db.delete(posts).where(eq(posts.published, false));</code></pre>
+
+<h3 id="migrations-with-drizzle-kit">Migrations with drizzle-kit</h3>
+<pre><code>// drizzle.config.ts
+import { defineConfig } from "drizzle-kit";
+export default defineConfig({
+  out: "./drizzle",
+  schema: "./src/db/schema.ts",
+  dialect: "sqlite",
+  dbCredentials: { url: Bun.env.DB_FILE_NAME ?? "app.db" },
+});</code></pre>
+<pre><code>bunx drizzle-kit push        # fast: apply schema directly (dev)
+bunx drizzle-kit generate    # emit versioned SQL migration files
+bunx drizzle-kit migrate     # apply generated migrations (prod)</code></pre>
+
+<h3 id="advanced-joins-relations-transactions">Advanced: joins, relations, transactions</h3>
+<pre><code>// Join posts to their authors, newest first
+const feed = await db
+  .select({ title: posts.title, author: users.name, at: posts.id })
+  .from(posts)
+  .innerJoin(users, eq(posts.authorId, users.id))
+  .where(eq(posts.published, true))
+  .orderBy(desc(posts.id))
+  .limit(20);
+
+// Aggregation with the magic `sql` operator
+const counts = await db
+  .select({ authorId: posts.authorId, n: dsql&lt;number&gt;`count(*)` })
+  .from(posts)
+  .groupBy(posts.authorId);
+
+// Transaction — rolls back on throw
+await db.transaction(async (tx) =&gt; {
+  const [u] = await tx.insert(users).values({ name: "Bob", email: "bob@x.com" }).returning();
+  await tx.insert(posts).values({ authorId: u.id, title: "Hello", published: true });
+});</code></pre>
+<p>Drizzle also drives Postgres (<code>drizzle-orm/bun-sql</code> or <code>node-postgres</code>) and MySQL — the schema builder and query API are the same; only the column-type imports and driver change.</p>
+<div class="note">Real-world tip: keep <code>drizzle-kit push</code> for local iteration, but commit <code>generate</code>d SQL migrations and run <code>migrate</code> in CI/production so schema changes are reviewable and reproducible. Pair Drizzle with <code>drizzle-zod</code> to derive request validators from the same schema.</div>
+
+<h2 id="mongodb-on-bun">MongoDB on Bun</h2>
+<p>MongoDB works on Bun with no special configuration — both the official <code>mongodb</code> driver and Mongoose run as-is.</p>
+
+<h3 id="native-driver">Native driver</h3>
+<pre><code>bun add mongodb</code></pre>
+<pre><code>import { MongoClient } from "mongodb";
+
+const client = new MongoClient(Bun.env.MONGO_URL ?? "mongodb://127.0.0.1:27017");
+await client.connect();
+const db = client.db("shop");
+const orders = db.collection("orders");
+
+// Insert
+const { insertedId } = await orders.insertOne({ userId: 1, total: 99, status: "pending", at: new Date() });
+
+// Query with an index-friendly filter + projection
+const pending = await orders
+  .find({ status: "pending" }, { projection: { total: 1, userId: 1 } })
+  .sort({ at: -1 })
+  .limit(50)
+  .toArray();
+
+// Update
+await orders.updateOne({ _id: insertedId }, { $set: { status: "paid" } });
+
+// Aggregation pipeline — revenue per user
+const revenue = await orders.aggregate([
+  { $match: { status: "paid" } },
+  { $group: { _id: "$userId", total: { $sum: "$total" } } },
+  { $sort: { total: -1 } },
+]).toArray();
+
+await client.close();</code></pre>
+
+<h3 id="transactions-2">Transactions</h3>
+<pre><code>const session = client.startSession();
+try {
+  await session.withTransaction(async () =&gt; {
+    await orders.insertOne({ userId: 1, total: 50, status: "paid" }, { session });
+    await db.collection("accounts").updateOne(
+      { userId: 1 }, { $inc: { balance: -50 } }, { session },
+    );
+  });
+} finally {
+  await session.endSession();
+}</code></pre>
+<div class="note">MongoDB multi-document transactions require a replica set (even a single-node one). For local dev: start <code>mongod</code> with <code>--replSet rs0</code> and run <code>rs.initiate()</code> once.</div>
+
+<h3 id="mongoose-schemas-models">Mongoose (schemas &amp; models)</h3>
+<pre><code>bun add mongoose</code></pre>
+<pre><code>import mongoose, { Schema, model } from "mongoose";
+
+await mongoose.connect(Bun.env.MONGO_URL ?? "mongodb://127.0.0.1:27017/shop");
+
+const orderSchema = new Schema({
+  userId: { type: Number, required: true, index: true },
+  total: { type: Number, required: true, min: 0 },
+  status: { type: String, enum: ["pending", "paid", "refunded"], default: "pending" },
+}, { timestamps: true });
+
+const Order = model("Order", orderSchema);
+
+const order = await Order.create({ userId: 1, total: 99 });
+const paid = await Order.find({ status: "paid" }).sort("-createdAt").lean();
+await Order.updateOne({ _id: order._id }, { status: "paid" });</code></pre>
+
+<h2 id="real-life-example-an-order-api-layer">Real-life example: an order API layer</h2>
+<p>A small repository module that a Hono route (see <a href="web-hono-auth.html">Web Dev</a>) would call — showing where each tool fits: <code>Bun.sql</code> for ad-hoc analytics, Drizzle for typed app queries.</p>
+<pre><code>// orders.repo.ts
+import { db } from "./db";
+import { sql } from "bun";
+import { orders } from "./db/schema";
+import { eq, desc } from "drizzle-orm";
+
+export const OrdersRepo = {
+  // Typed app query via Drizzle
+  listForUser: (userId: number) =&gt;
+    db.select().from(orders).where(eq(orders.userId, userId)).orderBy(desc(orders.id)),
+
+  create: (userId: number, total: number) =&gt;
+    db.insert(orders).values({ userId, total, status: "pending" }).returning(),
+
+  // Ad-hoc reporting via Bun.sql (raw, parameterized) against the same Postgres
+  dailyRevenue: () =&gt; sql`
+    SELECT date_trunc('day', created_at) AS day, sum(total) AS revenue
+    FROM orders WHERE status = ${"paid"}
+    GROUP BY 1 ORDER BY 1 DESC LIMIT 30
+  `,
+};</code></pre>
+<div class="note">Choosing between them: reach for <code>bun:sqlite</code>/<code>Bun.sql</code> when you want raw control or a zero-dependency footprint; reach for <strong>Drizzle</strong> when you want end-to-end type safety and migrations across a growing schema; reach for <strong>MongoDB</strong> when your data is document-shaped and schema-flexible. They coexist — many services use Drizzle for the core relational model and MongoDB for event logs or flexible metadata.</div>
+
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://bun.com/docs/api/sqlite" target="_blank" rel="noopener">bun:sqlite ↗</a></li>
+<li><a href="https://bun.com/docs/api/sql" target="_blank" rel="noopener">Bun.sql (SQL) ↗</a></li>
+<li><a href="https://orm.drizzle.team/docs/get-started/bun-sqlite-new" target="_blank" rel="noopener">Drizzle + Bun SQLite ↗</a></li>
+<li><a href="https://orm.drizzle.team/docs/rqb" target="_blank" rel="noopener">Drizzle queries ↗</a></li>
+<li><a href="https://bun.com/docs/guides/ecosystem/mongoose" target="_blank" rel="noopener">MongoDB + Bun (Mongoose) ↗</a></li>
+<li><a href="https://www.mongodb.com/docs/drivers/node/current/" target="_blank" rel="noopener">MongoDB Node driver ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="shell-terminal-cron.html"><small>Previous</small>🖥️ Shell, Terminal, Spawn & Cron</a>
 <a class="next" href="test-runner.html"><small>Next</small>✅ Test Runner</a>

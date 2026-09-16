@@ -23,43 +23,128 @@ const OUT = path.join(ROOT, "docs");
 const PAGES = [
   { slug: "getting-started", title: "Getting Started", icon: "🚀",
     doc: "https://bun.com/docs/installation",
-    blurb: "Install Bun, scaffold a project, run TS/JS natively, bunfig.toml, env loading." },
+    blurb: "Install, scaffold, run TS/JS natively, bunfig.toml, and env resolution order.",
+    further: [
+      ["Installation", "https://bun.com/docs/installation"],
+      ["bunfig.toml reference", "https://bun.com/docs/runtime/bunfig"],
+      ["Environment variables", "https://bun.com/docs/runtime/env"],
+      ["TypeScript support", "https://bun.com/docs/runtime/typescript"],
+    ] },
   { slug: "package-manager", title: "Package Manager", icon: "📦",
     doc: "https://bun.com/docs/cli/install",
-    blurb: "bun install/add/remove, bun.lockb, bun outdated, workspaces, bunx." },
+    blurb: "install/add/remove, the binary lockfile, bun outdated, workspaces, overrides, bunx.",
+    further: [
+      ["bun install", "https://bun.com/docs/cli/install"],
+      ["Lockfile", "https://bun.com/docs/install/lockfile"],
+      ["Workspaces", "https://bun.com/docs/install/workspaces"],
+      ["bunx", "https://bun.com/docs/cli/bunx"],
+    ] },
   { slug: "cli-runtime", title: "CLI & Runtime", icon: "⚡",
     doc: "https://bun.com/docs/cli/run",
-    blurb: "bun run, bunx, --watch/--hot, --print, shebang, command reference." },
+    blurb: "bun run, bunx, --watch/--hot semantics, --print, shebangs, the full flag set.",
+    further: [
+      ["bun run", "https://bun.com/docs/cli/run"],
+      ["Hot reloading", "https://bun.com/docs/runtime/hot"],
+      ["Debugger", "https://bun.com/docs/runtime/debugger"],
+      ["Web APIs in Bun", "https://bun.com/docs/runtime/web-apis"],
+    ] },
   { slug: "networking", title: "Networking", icon: "🌐",
     doc: "https://bun.com/docs/api/http",
-    blurb: "Bun.serve, WebSockets, TCP, UDP, fetch, and Workers." },
+    blurb: "Bun.serve routing, WebSockets + pub/sub, raw TCP/UDP, fetch extensions, Workers.",
+    further: [
+      ["HTTP server", "https://bun.com/docs/api/http"],
+      ["WebSockets", "https://bun.com/docs/api/websockets"],
+      ["TCP sockets", "https://bun.com/docs/api/tcp"],
+      ["UDP sockets", "https://bun.com/docs/api/udp"],
+      ["Workers", "https://bun.com/docs/api/workers"],
+    ] },
   { slug: "file-io", title: "File I/O", icon: "📄",
     doc: "https://bun.com/docs/api/file-io",
-    blurb: "Bun.file, Bun.write, BunFile, streams, and the s3:// protocol." },
+    blurb: "Bun.file, Bun.write, incremental writers, streaming, and the s3:// protocol.",
+    further: [
+      ["File I/O", "https://bun.com/docs/api/file-io"],
+      ["S3 & s3:// protocol", "https://bun.com/docs/api/s3"],
+      ["Streams", "https://bun.com/docs/api/streams"],
+    ] },
   { slug: "shell-terminal-cron", title: "Shell, Terminal, Spawn & Cron", icon: "🖥️",
-    doc: "https://bun.com/reference/bun",
-    blurb: "Bun.$, terminal utils, Bun.Terminal PTY, Bun.spawn, Bun.cron, and a CLI-app example." },
-  { slug: "databases", title: "Databases: SQLite & SQL", icon: "🗄️",
+    doc: "https://bun.com/docs/runtime/shell",
+    blurb: "Bun.$ scripting, terminal width, Bun.Terminal PTY, Bun.spawn, Bun.cron, a real CLI.",
+    further: [
+      ["Bun Shell ($)", "https://bun.com/docs/runtime/shell"],
+      ["Spawn", "https://bun.com/docs/api/spawn"],
+      ["Cron", "https://bun.com/reference/bun/cron"],
+      ["Terminal (PTY)", "https://bun.com/reference/bun/Terminal"],
+    ] },
+  { slug: "databases", title: "Databases: SQLite, SQL, Drizzle & MongoDB", icon: "🗄️",
     doc: "https://bun.com/docs/api/sql",
-    blurb: "bun:sqlite plus the unified Bun.sql client (Postgres / MySQL / SQLite)." },
+    blurb: "bun:sqlite, the unified Bun.sql client, Drizzle ORM (basic→advanced), and MongoDB.",
+    further: [
+      ["bun:sqlite", "https://bun.com/docs/api/sqlite"],
+      ["Bun.sql (SQL)", "https://bun.com/docs/api/sql"],
+      ["Drizzle + Bun SQLite", "https://orm.drizzle.team/docs/get-started/bun-sqlite-new"],
+      ["Drizzle queries", "https://orm.drizzle.team/docs/rqb"],
+      ["MongoDB + Bun (Mongoose)", "https://bun.com/docs/guides/ecosystem/mongoose"],
+      ["MongoDB Node driver", "https://www.mongodb.com/docs/drivers/node/current/"],
+    ] },
   { slug: "test-runner", title: "Test Runner", icon: "✅",
     doc: "https://bun.com/docs/cli/test",
-    blurb: "bun test, matchers, mocks, snapshots, lifecycle hooks, coverage." },
+    blurb: "bun test, matchers, mocks/spies, snapshots, lifecycle hooks, coverage, DOM testing.",
+    further: [
+      ["bun test", "https://bun.com/docs/cli/test"],
+      ["Writing tests", "https://bun.com/docs/test/writing"],
+      ["Mocks", "https://bun.com/docs/test/mocks"],
+      ["Snapshots", "https://bun.com/docs/test/snapshots"],
+      ["Coverage", "https://bun.com/docs/test/coverage"],
+    ] },
   { slug: "security-crypto", title: "Security & Crypto", icon: "🔐",
     doc: "https://bun.com/docs/api/hashing",
-    blurb: "Bun.password, Bun.hash, CryptoHasher, Bun.CSRF, and Bun.secrets." },
+    blurb: "Bun.password (argon2/bcrypt), Bun.hash, CryptoHasher + HMAC, Bun.CSRF, Bun.secrets.",
+    further: [
+      ["Hashing", "https://bun.com/docs/api/hashing"],
+      ["CSRF", "https://bun.com/reference/bun/CSRF"],
+      ["Secrets", "https://bun.com/reference/bun/secrets"],
+      ["node:crypto", "https://bun.com/docs/runtime/nodejs-apis"],
+    ] },
   { slug: "data-content", title: "Data, Content & Automation", icon: "🧩",
     doc: "https://bun.com/reference/bun",
-    blurb: "JSON/YAML/TOML/JSONC/JSONL/XML, Markdown, Image, archives, Glob, and WebView scraping." },
+    blurb: "JSON/YAML/TOML/JSONC/JSONL/XML, Markdown, Image pipeline, archives, Glob, WebView scraping.",
+    further: [
+      ["YAML", "https://bun.com/reference/bun/YAML"],
+      ["TOML", "https://bun.com/reference/bun/TOML"],
+      ["Markdown", "https://bun.com/reference/bun/markdown"],
+      ["Image", "https://bun.com/reference/bun/Image"],
+      ["Archive", "https://bun.com/reference/bun/Archive"],
+      ["Glob", "https://bun.com/reference/bun/Glob"],
+      ["WebView", "https://bun.com/reference/bun/WebView"],
+    ] },
   { slug: "utilities", title: "Utilities", icon: "🛠️",
     doc: "https://bun.com/docs/api/utils",
-    blurb: "Bun.env, sleep, which, escapeHTML, peek, deepEquals, nanoseconds." },
+    blurb: "Timing, which, escapeHTML, peek, deepEquals, compression, UUID v5/v7, ANSI helpers.",
+    further: [
+      ["Utilities", "https://bun.com/docs/api/utils"],
+      ["Bun.color", "https://bun.com/reference/bun/color"],
+      ["Compression (zlib/zstd)", "https://bun.com/reference/bun/gzipSync"],
+    ] },
   { slug: "web-hono-auth", title: "Web Dev: Hono + Auth + Storage", icon: "🔑",
     doc: "https://hono.dev",
-    blurb: "Hono app, JWT refresh tokens in HttpOnly cookies, SSO, and Bun.s3 storage." },
+    blurb: "Hono app, JWT access + refresh rotation in HttpOnly cookies, OAuth2/OIDC SSO, Bun.s3.",
+    further: [
+      ["Hono docs", "https://hono.dev/docs/"],
+      ["Hono JWT middleware", "https://hono.dev/docs/middleware/builtin/jwt"],
+      ["Hono cookie helper", "https://hono.dev/docs/helpers/cookie"],
+      ["OAuth 2.0 (RFC 6749)", "https://datatracker.ietf.org/doc/html/rfc6749"],
+      ["OpenID Connect", "https://openid.net/developers/how-connect-works/"],
+      ["Bun S3", "https://bun.com/docs/api/s3"],
+    ] },
   { slug: "e2e-deploy", title: "E2E Testing & Deploying", icon: "🚢",
     doc: "https://bun.com/docs/bundler/executables",
-    blurb: "Playwright E2E, bun build, --compile executables, Docker, production." },
+    blurb: "Playwright E2E under Bun, bun build, --compile standalone binaries, Docker, production.",
+    further: [
+      ["Playwright", "https://playwright.dev/docs/intro"],
+      ["Bundler", "https://bun.com/docs/bundler"],
+      ["Standalone executables", "https://bun.com/docs/bundler/executables"],
+      ["Bun Docker image", "https://hub.docker.com/r/oven/bun"],
+    ] },
 ];
 
 // ---- helpers ----
@@ -156,9 +241,24 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 `;
 
-function pageShell({ title, icon, doc, bodyHtml, toc, prev, next }) {
+function furtherHtml(further) {
+  if (!further || !further.length) return "";
+  const items = further
+    .map(([label, url]) => `<li><a href="${url}" target="_blank" rel="noopener">${label} ↗</a></li>`)
+    .join("\n");
+  return `<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list">${items}</ul></section>`;
+}
+
+function pageShell({ title, icon, doc, bodyHtml, toc, prev, next, further }) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -176,6 +276,7 @@ function pageShell({ title, icon, doc, bodyHtml, toc, prev, next }) {
 ${tocHtml(toc)}
 </ul></nav>
 ${bodyHtml}
+${furtherHtml(further)}
 <div class="pager">
 ${prev ? `<a class="prev" href="${prev.slug}.html"><small>Previous</small>${prev.icon} ${prev.title}</a>` : `<a class="prev" href="index.html"><small>Home</small>All sections</a>`}
 ${next ? `<a class="next" href="${next.slug}.html"><small>Next</small>${next.icon} ${next.title}</a>` : `<a class="next" href="index.html"><small>Done</small>Back to index</a>`}
@@ -208,7 +309,7 @@ function landing() {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bun Tutorial — builtins & standards, junior→mid</title>
+<title>Bun Tutorial — built-in standard library reference</title>
 <style>${STYLE}</style>
 </head>
 <body>
@@ -217,7 +318,7 @@ function landing() {
 <div class="hero">
 <div class="logo">🥟</div>
 <h1>Bun Tutorial</h1>
-<p>A comprehensive but approachable tour of Bun's built-in standard library — runnable examples for every builtin, with an official reference link in each section. Aimed at junior→mid developers.</p>
+<p>A practical, in-depth tour of Bun's built-in standard library — runnable, real-world examples for every builtin, each section carrying official reference links for further reading. Written for developers building production services who want the depth behind each API, not just its shape.</p>
 </div>
 <div class="grid">
 ${cards}
@@ -240,7 +341,7 @@ function build() {
     const { html, toc } = injectAnchorsAndToc(raw);
     const out = pageShell({
       title: p.title, icon: p.icon, doc: p.doc, bodyHtml: html, toc,
-      prev: PAGES[i - 1], next: PAGES[i + 1],
+      prev: PAGES[i - 1], next: PAGES[i + 1], further: p.further,
     });
     fs.writeFileSync(path.join(OUT, `${p.slug}.html`), out);
     built++;

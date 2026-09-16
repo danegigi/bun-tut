@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -165,6 +170,12 @@ NODE_ENV=production bun run src/index.ts      # run in prod mode</code></pre>
 <h2 id="where-to-go-next">Where to go next</h2>
 <p>You've now toured Bun's built-in standard library end to end. Every section links to its official reference at the top — bookmark <a href="https://bun.com/docs" target="_blank" rel="noopener">bun.com/docs</a> and <a href="https://bun.com/reference/bun" target="_blank" rel="noopener">bun.com/reference/bun</a> for the full API surface.</p>
 
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://playwright.dev/docs/intro" target="_blank" rel="noopener">Playwright ↗</a></li>
+<li><a href="https://bun.com/docs/bundler" target="_blank" rel="noopener">Bundler ↗</a></li>
+<li><a href="https://bun.com/docs/bundler/executables" target="_blank" rel="noopener">Standalone executables ↗</a></li>
+<li><a href="https://hub.docker.com/r/oven/bun" target="_blank" rel="noopener">Bun Docker image ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="web-hono-auth.html"><small>Previous</small>🔑 Web Dev: Hono + Auth + Storage</a>
 <a class="next" href="index.html"><small>Done</small>Back to index</a>

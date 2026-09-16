@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -130,6 +135,12 @@ bunx --bun vite                  # ensure it runs on Bun's runtime</code></pre>
 <pre><code>bun run dev
 bun start        # "start" and "test" can skip the "run" keyword</code></pre>
 
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://bun.com/docs/cli/install" target="_blank" rel="noopener">bun install ↗</a></li>
+<li><a href="https://bun.com/docs/install/lockfile" target="_blank" rel="noopener">Lockfile ↗</a></li>
+<li><a href="https://bun.com/docs/install/workspaces" target="_blank" rel="noopener">Workspaces ↗</a></li>
+<li><a href="https://bun.com/docs/cli/bunx" target="_blank" rel="noopener">bunx ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="getting-started.html"><small>Previous</small>🚀 Getting Started</a>
 <a class="next" href="cli-runtime.html"><small>Next</small>⚡ CLI & Runtime</a>

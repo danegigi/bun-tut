@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -153,8 +158,15 @@ test.each([[1, 1], [2, 4], [3, 9]])("square(%i) = %i", (n, sq) =&gt; {
 [test]
 preload = ["./test/setup.ts"]      # runs before the suite</code></pre>
 
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://bun.com/docs/cli/test" target="_blank" rel="noopener">bun test ↗</a></li>
+<li><a href="https://bun.com/docs/test/writing" target="_blank" rel="noopener">Writing tests ↗</a></li>
+<li><a href="https://bun.com/docs/test/mocks" target="_blank" rel="noopener">Mocks ↗</a></li>
+<li><a href="https://bun.com/docs/test/snapshots" target="_blank" rel="noopener">Snapshots ↗</a></li>
+<li><a href="https://bun.com/docs/test/coverage" target="_blank" rel="noopener">Coverage ↗</a></li></ul></section>
 <div class="pager">
-<a class="prev" href="databases.html"><small>Previous</small>🗄️ Databases: SQLite & SQL</a>
+<a class="prev" href="databases.html"><small>Previous</small>🗄️ Databases: SQLite, SQL, Drizzle & MongoDB</a>
 <a class="next" href="security-crypto.html"><small>Next</small>🔐 Security & Crypto</a>
 </div>
 </main>

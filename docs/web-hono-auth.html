@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -248,6 +253,14 @@ app.post("/upload-url", (c) =&gt; {
 });</code></pre>
 <div class="note">Large files: <code>s3.file(key).writer({ partSize, queueSize, retry })</code> streams multipart uploads automatically. The <code>s3://</code> protocol also works through plain <code>fetch()</code> and <code>Bun.file()</code> — see <a href="file-io.html">File I/O</a>.</div>
 
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://hono.dev/docs/" target="_blank" rel="noopener">Hono docs ↗</a></li>
+<li><a href="https://hono.dev/docs/middleware/builtin/jwt" target="_blank" rel="noopener">Hono JWT middleware ↗</a></li>
+<li><a href="https://hono.dev/docs/helpers/cookie" target="_blank" rel="noopener">Hono cookie helper ↗</a></li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc6749" target="_blank" rel="noopener">OAuth 2.0 (RFC 6749) ↗</a></li>
+<li><a href="https://openid.net/developers/how-connect-works/" target="_blank" rel="noopener">OpenID Connect ↗</a></li>
+<li><a href="https://bun.com/docs/api/s3" target="_blank" rel="noopener">Bun S3 ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="utilities.html"><small>Previous</small>🛠️ Utilities</a>
 <a class="next" href="e2e-deploy.html"><small>Next</small>🚢 E2E Testing & Deploying</a>

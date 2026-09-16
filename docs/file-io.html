@@ -58,6 +58,11 @@ pre:hover .copy{opacity:1}
 .card h3{margin:.3em 0;color:var(--accent);font-size:1.1rem}
 .card p{color:var(--muted);font-size:14px;margin:0}
 @media(max-width:640px){nav.toc ul{columns:1}}
+.further{margin-top:2.4em;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:6px 20px 16px}
+.further h2{border-top:none;color:var(--accent-2)}
+.further-list{margin:0;padding-left:20px;columns:2;column-gap:28px}
+.further-list li{margin:6px 0;break-inside:avoid}
+@media(max-width:640px){.further-list{columns:1}}
 </style>
 </head>
 <body>
@@ -123,6 +128,11 @@ const data = await remote.json();
 const res = await fetch("s3://my-bucket/report.json");</code></pre>
 <div class="note">Credentials come from <code>S3_*</code> / <code>AWS_*</code> environment variables (or an explicit <code>s3:</code> options object). See the Web Dev section for <code>Bun.S3Client</code>, presigned URLs, and multipart uploads.</div>
 
+<section class="further"><h2 id="further-reading">Further reading</h2>
+<p>Official documentation for the APIs and tools covered on this page:</p>
+<ul class="further-list"><li><a href="https://bun.com/docs/api/file-io" target="_blank" rel="noopener">File I/O ↗</a></li>
+<li><a href="https://bun.com/docs/api/s3" target="_blank" rel="noopener">S3 & s3:// protocol ↗</a></li>
+<li><a href="https://bun.com/docs/api/streams" target="_blank" rel="noopener">Streams ↗</a></li></ul></section>
 <div class="pager">
 <a class="prev" href="networking.html"><small>Previous</small>🌐 Networking</a>
 <a class="next" href="shell-terminal-cron.html"><small>Next</small>🖥️ Shell, Terminal, Spawn & Cron</a>
