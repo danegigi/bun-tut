@@ -80,6 +80,8 @@ pre:hover .copy{opacity:1}
 <li class="lvl2"><a href="#bunglob-pattern-matching">Bun.Glob — pattern matching</a></li>
 <li class="lvl2"><a href="#buncolor-buninspect">Bun.color &amp; Bun.inspect</a></li>
 <li class="lvl2"><a href="#bunwebview-headless-browser-scraping">Bun.WebView — headless browser &amp; scraping</a></li>
+<li class="lvl2"><a href="#real-life-example-an-image-thumbnail-pipeline">Real-life example: an image thumbnail pipeline</a></li>
+<li class="lvl2"><a href="#real-life-example-scrape-a-paginated-list">Real-life example: scrape a paginated list</a></li>
 </ul></nav>
 <p>Bun treats structured data and content as first-class: config formats parse natively, images transform through a fast pipeline, archives pack and unpack, and <code>Bun.WebView</code> drives a headless browser for scraping — all built in.</p>
 
@@ -263,6 +265,58 @@ await view.click("a.morelink");
 await view.screenshot({ format: "jpeg", quality: 80, encoding: "buffer" });</code></pre>
 <p>Input methods dispatch <em>native</em> events (<code>isTrusted: true</code>), <code>click(selector)</code> waits for the element to become actionable, and <code>using</code>/<code>await using</code> auto-closes the view. For persistence across runs, pass <code>dataStore: { directory: "./profile" }</code>.</p>
 <div class="note">Confirmed against the <a href="https://bun.com/reference/bun/WebView" target="_blank" rel="noopener">Bun 1.4.2 reference</a>: constructor options (<code>width</code>, <code>height</code>, <code>url</code>, <code>backend</code>, <code>console</code>, <code>dataStore</code>), the <code>click(selector, { timeout, button, clickCount, modifiers })</code> actionability wait, and the <code>Modifier</code> / <code>VirtualKey</code> sets are all as documented. On macOS the default <code>"webkit"</code> backend uses the system WebKit (nothing to install); on Linux/Windows pass <code>backend: "chrome"</code> to drive an installed Chrome/Chromium/Edge over the DevTools Protocol.</div>
+
+<h2 id="real-life-example-an-image-thumbnail-pipeline">Real-life example: an image thumbnail pipeline</h2>
+<p>A build step that scans an image directory, generates responsive WebP thumbnails plus a blur placeholder for each, and writes a JSON manifest the frontend consumes — combining <code>Bun.Glob</code>, <code>Bun.Image</code>, and JSON.</p>
+<pre><code>import { Glob } from "bun";
+
+const sizes = [320, 640, 1280];
+const manifest: Record&lt;string, unknown&gt; = {};
+
+for await (const src of new Glob("images/*.{jpg,png}").scan(".")) {
+  const name = src.split("/").pop()!.replace(/\.\w+$/, "");
+  const base = new Bun.Image(src);
+
+  const { width, height } = await base.metadata();
+  const lqip = await new Bun.Image(src).placeholder();     // tiny blur data: URL
+
+  const variants: Record&lt;number, string&gt; = {};
+  for (const w of sizes) {
+    if (w &gt; width) continue;                               // never upscale
+    const out = `dist/img/${name}-${w}.webp`;
+    await new Bun.Image(src)
+      .resize(w, undefined, { withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .write(out);
+    variants[w] = out;
+  }
+
+  manifest[name] = { width, height, lqip, variants };
+}
+
+await Bun.write("dist/img/manifest.json", JSON.stringify(manifest, null, 2));
+console.log(`processed ${Object.keys(manifest).length} images`);</code></pre>
+<div class="note">Why this shape: <code>placeholder()</code> gives a ~400-byte blur you inline as the <code>&lt;img&gt;</code> background so the page has no layout shift while the real WebP loads; the <code>manifest.json</code> lets the frontend build a <code>srcset</code> from <code>variants</code>. The whole pipeline is one <code>bun run</code> — no ImageMagick, no sharp native build.</div>
+
+<h2 id="real-life-example-scrape-a-paginated-list">Real-life example: scrape a paginated list</h2>
+<pre><code>// Collect items across N pages with Bun.WebView, respecting the site by pacing
+await using view = new Bun.WebView();
+const all: { title: string; url: string }[] = [];
+
+for (let page = 1; page &lt;= 5; page++) {
+  await view.navigate(`https://example.com/products?page=${page}`);
+  const items = await view.evaluate(`
+    [...document.querySelectorAll('.product')].map(el => ({
+      title: el.querySelector('h3')?.textContent?.trim(),
+      url: el.querySelector('a')?.href,
+    }))
+  `);
+  if (!items.length) break;              // reached the end
+  all.push(...items);
+  await Bun.sleep(500);                  // be polite between requests
+}
+
+await Bun.write("products.jsonl", all.map((x) =&gt; JSON.stringify(x)).join("\n"));</code></pre>
 
 <section class="further"><h2 id="further-reading">Further reading</h2>
 <p>Official documentation for the APIs and tools covered on this page:</p>

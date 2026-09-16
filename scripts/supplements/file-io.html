@@ -47,3 +47,46 @@ const data = await remote.json();
 // fetch works too
 const res = await fetch("s3://my-bucket/report.json");</code></pre>
 <div class="note">Credentials come from <code>S3_*</code> / <code>AWS_*</code> environment variables (or an explicit <code>s3:</code> options object). See the Web Dev section for <code>Bun.S3Client</code>, presigned URLs, and multipart uploads.</div>
+
+<h2>Real-life example: a streaming upload endpoint</h2>
+<p>Accept a multipart file upload and stream it to disk (or S3) without buffering the whole body in memory — the pattern for handling large uploads in a <code>Bun.serve</code> handler.</p>
+<pre><code>Bun.serve({
+  routes: {
+    "/upload": {
+      POST: async (req) =&gt; {
+        const form = await req.formData();
+        const file = form.get("file");
+        if (!(file instanceof File)) {
+          return Response.json({ error: "no file" }, { status: 400 });
+        }
+
+        // Guard size and type before touching disk
+        if (file.size &gt; 25 * 1024 * 1024) {
+          return Response.json({ error: "too large" }, { status: 413 });
+        }
+
+        // Stream the Blob straight to disk — Bun.write consumes it without
+        // materializing the whole file in a string/buffer.
+        const key = `uploads/${crypto.randomUUID()}-${file.name}`;
+        const bytesWritten = await Bun.write(key, file);
+
+        // Same call works against S3: await Bun.write(s3.file(key), file);
+        return Response.json({ key, bytes: bytesWritten });
+      },
+    },
+  },
+});</code></pre>
+
+<h2>Real-life example: tail a growing log file</h2>
+<pre><code>// Follow a log like `tail -f`, printing new lines as they're appended
+let offset = (await Bun.file("app.log").stat()).size;
+setInterval(async () =&gt; {
+  const file = Bun.file("app.log");
+  const size = (await file.stat()).size;
+  if (size &gt; offset) {
+    const chunk = await file.slice(offset, size).text();
+    process.stdout.write(chunk);
+    offset = size;
+  }
+}, 500);</code></pre>
+<div class="note"><code>Bun.write</code> accepting a <code>File</code>/<code>Blob</code> directly is what keeps the upload streaming — never do <code>await file.arrayBuffer()</code> first on a large upload, which pulls the entire payload into memory. Cap size <em>before</em> reading, and validate the content type against an allow-list rather than trusting the client's declared MIME.</div>

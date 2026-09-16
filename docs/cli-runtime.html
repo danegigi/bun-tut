@@ -77,6 +77,7 @@ pre:hover .copy{opacity:1}
 <li class="lvl2"><a href="#useful-flags">Useful flags</a></li>
 <li class="lvl2"><a href="#reading-input">Reading input</a></li>
 <li class="lvl2"><a href="#runtime-info">Runtime info</a></li>
+<li class="lvl2"><a href="#real-life-example-a-release-script">Real-life example: a release script</a></li>
 </ul></nav>
 <p>The <code>bun</code> CLI is the entry point to the runtime. It runs files and scripts, watches for changes, and hot-reloads a running server.</p>
 
@@ -127,6 +128,41 @@ console.log({ cmd, rest });</code></pre>
 Bun.revision     // git sha of the build
 Bun.main         // absolute path of the entry file
 Bun.env.NODE_ENV // environment</code></pre>
+
+<h2 id="real-life-example-a-release-script">Real-life example: a release script</h2>
+<p>A single-file release automation script you'd run with <code>bun run scripts/release.ts patch</code> — bumps the version, tags, and builds, using <code>Bun.$</code> and argv. Runnable as a shebang tool too.</p>
+<pre><code>#!/usr/bin/env bun
+// scripts/release.ts  —  usage: bun run scripts/release.ts &lt;patch|minor|major&gt;
+import { $ } from "bun";
+
+const bump = Bun.argv[2] ?? "patch";
+if (!["patch", "minor", "major"].includes(bump)) {
+  console.error(`unknown bump "${bump}"`);
+  process.exit(1);
+}
+
+// Refuse to release from a dirty tree
+const status = (await $`git status --porcelain`.text()).trim();
+if (status) {
+  console.error("working tree is dirty — commit or stash first");
+  process.exit(1);
+}
+
+const pkg = await Bun.file("package.json").json();
+const [maj, min, pat] = pkg.version.split(".").map(Number);
+const next = bump === "major" ? `${maj + 1}.0.0`
+           : bump === "minor" ? `${maj}.${min + 1}.0`
+           : `${maj}.${min}.${pat + 1}`;
+
+pkg.version = next;
+await Bun.write("package.json", JSON.stringify(pkg, null, 2) + "\n");
+
+await $`bun run build`;                       // build with the new version baked in
+await $`git commit -am ${"release: v" + next}`;
+await $`git tag ${"v" + next}`;
+
+console.log(`released v${next} — run: git push --follow-tags`);</code></pre>
+<div class="note">Because <code>Bun.$</code> interpolation is auto-escaped, the commit message and tag are safe even with spaces or special characters. During development, run this under <code>bun --watch</code> only for pure iteration — a release script is a one-shot, so plain <code>bun run</code> is correct.</div>
 
 <section class="further"><h2 id="further-reading">Further reading</h2>
 <p>Official documentation for the APIs and tools covered on this page:</p>

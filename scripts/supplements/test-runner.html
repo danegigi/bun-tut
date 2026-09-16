@@ -76,3 +76,40 @@ test.each([[1, 1], [2, 4], [3, 9]])("square(%i) = %i", (n, sq) =&gt; {
 <pre><code># bunfig.toml
 [test]
 preload = ["./test/setup.ts"]      # runs before the suite</code></pre>
+
+<h2>Real-life example: integration test of an API route</h2>
+<p>Test a real handler against an isolated in-memory database, exercising the full request→response path — the pattern for testing a service without mocking your own code.</p>
+<pre><code>// orders.test.ts
+import { test, expect, beforeEach, afterEach } from "bun:test";
+import { Database } from "bun:sqlite";
+import { makeApp } from "../src/app";        // (db) =&gt; Hono app
+
+let db: Database;
+let app: ReturnType&lt;typeof makeApp&gt;;
+
+beforeEach(() =&gt; {
+  db = new Database(":memory:");             // fresh DB per test — full isolation
+  db.run("CREATE TABLE orders (id INTEGER PRIMARY KEY, total INTEGER)");
+  app = makeApp(db);
+});
+afterEach(() =&gt; db.close());
+
+test("POST /orders creates an order", async () =&gt; {
+  const res = await app.request("/orders", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ total: 99 }),
+  });
+  expect(res.status).toBe(201);
+  expect(await res.json()).toMatchObject({ id: 1, total: 99 });
+
+  // Assert the side effect really happened
+  const row = db.query("SELECT total FROM orders WHERE id = 1").get();
+  expect(row).toEqual({ total: 99 });
+});
+
+test("GET /orders/:id returns 404 for missing", async () =&gt; {
+  const res = await app.request("/orders/999");
+  expect(res.status).toBe(404);
+});</code></pre>
+<div class="note">Two techniques that make integration tests fast and reliable: <code>app.request(...)</code> (Hono's built-in fetch harness) hits the real router with no network or open port, and a per-test <code>:memory:</code> SQLite DB gives full isolation with zero teardown cost. Reserve <code>mock()</code> for third-party boundaries (payment gateways, email) — not your own database.</div>

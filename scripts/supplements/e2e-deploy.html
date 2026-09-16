@@ -85,5 +85,63 @@ docker run -p 3000:3000 --env-file .env.production my-bun-app</code></pre>
 NODE_ENV=production bun run src/index.ts      # run in prod mode</code></pre>
 <div class="note">A compiled <code>--compile</code> binary is often the simplest deploy for CLIs and single-service apps: copy one file, run it, no runtime to install. Use the Docker image when you need the full <code>node_modules</code> tree or orchestration.</div>
 
+<h2>Real-life example: a full CI/CD pipeline</h2>
+<p>A GitHub Actions workflow that lints types, runs unit + E2E tests, and on a tagged release cross-compiles standalone binaries for Linux and macOS and attaches them to the release.</p>
+<pre><code># .github/workflows/release.yml
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
+      - run: bun install --frozen-lockfile
+      - run: bunx tsc --noEmit          # typecheck
+      - run: bun test --coverage        # unit + integration
+      - run: bunx playwright install --with-deps chromium
+      - run: bunx playwright test       # E2E
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.4.2 }
+      - run: bun install --frozen-lockfile
+      - name: Cross-compile binaries
+        run: |
+          bun build ./src/cli.ts --compile --minify \
+            --target=bun-linux-x64 --outfile dist/myapp-linux-x64
+          bun build ./src/cli.ts --compile --minify \
+            --target=bun-darwin-arm64 --outfile dist/myapp-macos-arm64
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*</code></pre>
+
+<h2>Real-life example: containerized service with a health check</h2>
+<pre><code># Dockerfile — multi-stage, non-root, healthcheck
+FROM oven/bun:1.4.2 AS deps
+WORKDIR /app
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile --production
+
+FROM oven/bun:1.4.2 AS release
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NODE_ENV=production
+EXPOSE 3000
+USER bun
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD bun --eval "fetch('http://localhost:3000/health').then(r =&gt; process.exit(r.ok ? 0 : 1)).catch(() =&gt; process.exit(1))"
+CMD ["bun", "run", "src/index.ts"]</code></pre>
+<div class="note">Pin the exact Bun version everywhere — <code>setup-bun</code>, the Docker tag, and <code>engines</code> — so CI, image, and local dev can't drift. The <code>HEALTHCHECK</code> lets the orchestrator restart an unhealthy container; pair it with the graceful <code>SIGTERM</code> shutdown from the <a href="networking.html">Networking</a> example so rolling deploys drain in-flight requests instead of dropping them.</div>
+
 <h2>Where to go next</h2>
 <p>You've now toured Bun's built-in standard library end to end. Every section links to its official reference at the top — bookmark <a href="https://bun.com/docs" target="_blank" rel="noopener">bun.com/docs</a> and <a href="https://bun.com/reference/bun" target="_blank" rel="noopener">bun.com/reference/bun</a> for the full API surface.</p>

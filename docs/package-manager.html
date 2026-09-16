@@ -77,6 +77,7 @@ pre:hover .copy{opacity:1}
 <li class="lvl2"><a href="#workspaces-monorepos">Workspaces (monorepos)</a></li>
 <li class="lvl2"><a href="#bunx-run-a-package-without-installing">bunx — run a package without installing</a></li>
 <li class="lvl2"><a href="#scripts">Scripts</a></li>
+<li class="lvl2"><a href="#real-life-example-a-reproducible-ci-install">Real-life example: a reproducible CI install</a></li>
 </ul></nav>
 <p>Bun's package manager is a drop-in replacement for npm/yarn/pnpm — it reads <code>package.json</code>, installs from the npm registry, and is dramatically faster thanks to a global cache and a binary lockfile.</p>
 
@@ -134,6 +135,32 @@ bunx --bun vite                  # ensure it runs on Bun's runtime</code></pre>
 }</code></pre>
 <pre><code>bun run dev
 bun start        # "start" and "test" can skip the "run" keyword</code></pre>
+
+<h2 id="real-life-example-a-reproducible-ci-install">Real-life example: a reproducible CI install</h2>
+<p>The install step of a CI pipeline for a workspace monorepo — deterministic, dev-deps included for building/testing, cached between runs.</p>
+<pre><code># .github/workflows/ci.yml (excerpt)
+- uses: oven-sh/setup-bun@v2
+  with:
+    bun-version: 1.4.2
+
+# Fail if the lockfile would change — catches an un-committed dependency bump
+- run: bun install --frozen-lockfile
+
+# Build + test every workspace in one pass
+- run: bun run --filter='*' build
+- run: bun test</code></pre>
+<p>And the matching root <code>package.json</code> for a monorepo with a shared UI package consumed by two apps:</p>
+<pre><code>{
+  "name": "acme",
+  "private": true,
+  "workspaces": ["packages/*", "apps/*"],
+  "engines": { "bun": ">=1.0.0" },
+  "scripts": {
+    "build": "bun run --filter='*' build",
+    "typecheck": "bunx tsc --noEmit"
+  }
+}</code></pre>
+<div class="note">Real-world workflow: run <code>bun install</code> locally (updates <code>bun.lockb</code>), commit the lockfile, and let CI run <code>--frozen-lockfile</code> so a drifted lockfile fails the build instead of silently resolving different versions. Use <code>overrides</code> in the root <code>package.json</code> to pin a transitive dependency across every workspace at once.</div>
 
 <section class="further"><h2 id="further-reading">Further reading</h2>
 <p>Official documentation for the APIs and tools covered on this page:</p>
